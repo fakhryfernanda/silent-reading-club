@@ -1,0 +1,240 @@
+{
+  "name": "Silent Reading Club — WhatsApp Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "silent-reading-club",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "src-node-0001",
+      "name": "Trigger: Pesan WA",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [200, 300],
+      "webhookId": "src-webhook-post"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Ekstrak data dari payload WAHA (WhatsApp HTTP API)\n// Referensi format: https://waha.devlike.pro/docs/how-to/webhooks/\n\nconst body = $input.item.json.body ?? $input.item.json;\n\n// Hanya proses event 'message'\nif (body?.event !== 'message') {\n  return [{ json: { skip: true } }];\n}\n\nconst payload = body.payload;\n\n// Hanya proses pesan teks (type === 'chat'), bukan media/voice note/dsb\nif (payload?.type !== 'chat') {\n  return [{ json: { skip: true } }];\n}\n\n// Abaikan pesan dari bot sendiri\nif (payload.fromMe) {\n  return [{ json: { skip: true } }];\n}\n\n// Di grup: pengirim ada di payload.participant, bukan payload.from\n// payload.from = ID grup (e.g. '120363xxx@g.us')\n// payload.participant = nomor pengirim (e.g. '628xxx@c.us')\nconst rawPhone = payload.participant ?? payload.from;\nconst wa_phone = '+' + rawPhone.replace(/@c\\.us$/, '').replace(/@g\\.us$/, '');\n\n// Nama kontak dari notifyName\nconst display_name = payload._data?.notifyName ?? 'Anggota';\n\n// chat_id dipakai untuk kirim reply (ID grup atau nomor DM)\nconst chat_id = payload.from;\n\nreturn [{\n  json: {\n    skip: false,\n    wa_phone,\n    display_name,\n    text: payload.body,\n    chat_id,\n  }\n}];"
+      },
+      "id": "src-node-0003",
+      "name": "Ekstrak Data WA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-skip",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-bot",
+              "leftValue": "={{ $json.text }}",
+              "rightValue": "@bot",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "src-node-0004",
+      "name": "Ada Mention @bot?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Bangun prompt dan request body untuk Anthropic API\nconst waData = $('Ekstrak Data WA').item.json;\nconst text = waData.text;\n\nconst prompt = `Kamu adalah asisten parser untuk komunitas baca Silent Reading Club.\n\nTugasmu: ekstrak informasi dari pesan WhatsApp anggota komunitas dan kembalikan HANYA JSON valid (tanpa markdown code block, tanpa penjelasan tambahan apapun).\n\nPESAN WHATSAPP:\n${text}\n\nFORMAT OUTPUT (hanya JSON murni, tidak ada teks lain):\n{\n  \"book_title\": \"Judul buku yang disebutkan\",\n  \"book_author\": \"Nama penulis, atau null jika tidak disebutkan\",\n  \"content\": \"Catatan atau insight bacaan yang bersih dan informatif\",\n  \"found_book\": true\n}\n\nATURAN:\n- Pesan bisa campur bahasa Indonesia dan Inggris — keduanya valid\n- Abaikan @bot, mention lain, dan kata sapaan seperti 'halo', 'guys', dll\n- field \"content\" harus ditulis ulang menjadi catatan yang rapi dan bermanfaat, bukan copas mentah\n- Jika tidak ada judul buku yang bisa diidentifikasi dengan jelas, kembalikan: {\"found_book\": false, \"book_title\": null, \"book_author\": null, \"content\": null}\n- Hanya kembalikan field yang disebutkan di atas, tidak ada tambahan`;\n\nconst requestBody = {\n  model: 'claude-sonnet-4-20250514',\n  max_tokens: 1024,\n  messages: [{ role: 'user', content: prompt }]\n};\n\nreturn [{ json: { requestBody: JSON.stringify(requestBody) } }];"
+      },
+      "id": "src-node-0005",
+      "name": "Buat Request Claude",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "={{ $json.requestBody }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "src-node-0006",
+      "name": "Panggil Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1160, 220],
+      "credentials": {
+        "anthropicApi": {
+          "id": "GANTI_DENGAN_ID_CREDENTIAL",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse respons JSON dari Claude\nconst response = $input.item.json;\n\nif (!response?.content?.[0]?.text) {\n  throw new Error('Respons Claude tidak valid: ' + JSON.stringify(response));\n}\n\nconst rawText = response.content[0].text.trim();\n\n// Bersihkan markdown code block jika ada\nconst cleaned = rawText\n  .replace(/^```json\\s*/i, '')\n  .replace(/^```\\s*/i, '')\n  .replace(/\\s*```$/, '')\n  .trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(cleaned);\n} catch (e) {\n  throw new Error('Gagal parse JSON dari Claude: ' + cleaned);\n}\n\nif (!parsed.found_book || !parsed.book_title) {\n  return [{ json: { skip: true } }];\n}\n\nconst waData = $('Ekstrak Data WA').item.json;\n\nreturn [{\n  json: {\n    skip: false,\n    wa_phone: waData.wa_phone,\n    display_name: waData.display_name,\n    book_title: parsed.book_title,\n    book_author: parsed.book_author ?? null,\n    content: parsed.content,\n    raw_message: waData.text,\n  }\n}];"
+      },
+      "id": "src-node-0007",
+      "name": "Parse Respons Claude",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 220]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-skip-book",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "src-node-0008",
+      "name": "Ada Info Buku?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1640, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NEXT_PUBLIC_BASE_URL }}/api/notes",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ wa_phone: $json.wa_phone, display_name: $json.display_name, book_title: $json.book_title, book_author: $json.book_author, content: $json.content, raw_message: $json.raw_message }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "src-node-0009",
+      "name": "Simpan Note ke Website",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1880, 140]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WAHA_BASE_URL }}/api/sendText",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ session: $env.WAHA_SESSION, chatId: $('Ekstrak Data WA').item.json.chat_id, text: 'Noted! Catatan *' + $('Parse Respons Claude').item.json.display_name + '* tentang *' + $('Parse Respons Claude').item.json.book_title + '* sudah disimpan. 📚' }) }}",
+        "options": {}
+      },
+      "id": "src-node-0012",
+      "name": "Kirim Reply WA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2120, 140]
+    }
+  ],
+  "connections": {
+    "Trigger: Pesan WA": {
+      "main": [
+        [{ "node": "Ekstrak Data WA", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ekstrak Data WA": {
+      "main": [
+        [{ "node": "Ada Mention @bot?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ada Mention @bot?": {
+      "main": [
+        [{ "node": "Buat Request Claude", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Buat Request Claude": {
+      "main": [
+        [{ "node": "Panggil Claude", "type": "main", "index": 0 }]
+      ]
+    },
+    "Panggil Claude": {
+      "main": [
+        [{ "node": "Parse Respons Claude", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse Respons Claude": {
+      "main": [
+        [{ "node": "Ada Info Buku?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ada Info Buku?": {
+      "main": [
+        [{ "node": "Simpan Note ke Website", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Simpan Note ke Website": {
+      "main": [
+        [{ "node": "Kirim Reply WA", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-e5f6-7890-abcd-ef1234567892",
+  "id": "silent-reading-club-bot",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": ""
+  }
+}
