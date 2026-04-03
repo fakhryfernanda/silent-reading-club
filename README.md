@@ -8,6 +8,7 @@ Website + bot WhatsApp untuk komunitas baca. Tag bot di WhatsApp, notes bacaan k
 - 📚 **Lihat bacaan** — Semua notes terkumpul per buku di website
 - 👥 **Multi-reader** — Lihat catatan dari berbagai pembaca untuk buku yang sama
 - 🔍 **Filter** — Filter buku by tipe (Fiksi, Nonfiksi, dll), by pembaca, dan pencarian judul (live search)
+- 📄 **Pagination** — 6 buku per halaman, navigasi client-side
 - 🎨 **Markdown support** — Format notes dengan markdown (bold, italic, list, dll)
 
 ## Setup
@@ -57,11 +58,12 @@ Website buka di [http://localhost:3000](http://localhost:3000)
 
 ### Website
 
-- **Homepage** — Lihat semua buku dan notes terbaru
+- **Homepage** — Lihat semua buku dan notes terbaru (pagination: 6 buku per halaman)
   - **Filter by tipe** — Fiksi, Nonfiksi, Komik, Artikel, Jurnal, Kitab Suci
   - **Filter by pembaca** — Tampilkan hanya buku yang dibaca orang tertentu
   - **Pencarian judul** — Live search, per-word matching
   - Filter tersimpan di URL — bisa di-share/bookmark
+  - **Pagination** — Client-side, tombol "Sebelumnya" / "Selanjutnya"
 - **Detail Buku** — Klik buku untuk lihat semua catatan
   - **Filter pembaca** — Lihat catatan dari pembaca tertentu
 - **Admin Panel** — Buka `/admin?key=YOUR_SECRET` untuk CRUD data

@@ -161,6 +161,8 @@ Mengembalikan semua buku beserta stats (jumlah pembaca, jumlah notes, preview no
 - `title` — Filter by judul buku (live search, per-word matching, e.g., `?title=atomic+habits`)
 - Bisa dikombinasikan: `?type=Nonfiksi&readerId=uuid&title=atomic`
 
+> **Catatan:** Pagination dilakukan di frontend (client-side). API mengembalikan semua buku yang sudah difilter. BookGrid component melakukan slice array untuk menampilkan 6 buku per halaman.
+
 ### `GET /api/books/:id`
 Mengembalikan detail satu buku beserta semua notes-nya (dengan info member).
 
@@ -210,12 +212,13 @@ Semua endpoint admin memerlukan query param `?key=ADMIN_SECRET`. Tanpa key yang 
 ## Halaman Website
 
 ### Homepage (`/`)
-- Daftar semua buku dalam grid
+- Daftar semua buku dalam grid (pagination: 6 buku per halaman)
 - Tiap kartu: judul, penulis, avatar pembaca, jumlah notes, preview notes terbaru
 - Stats ringkas di header: jumlah buku, pembaca, catatan
 - **Filter buku**: filter by tipe (Fiksi, Nonfiksi, dll), by pembaca, dan pencarian judul buku (live search)
 - Filter tersimpan di URL (`?type=Nonfiksi&reader=uuid&title=atomic`) — bisa di-share/bookmark
 - Tombol "Reset filter" untuk clear semua filter sekaligus
+- **Pagination**: client-side, default 6 buku per halaman, tombol "Sebelumnya" / "Selanjutnya"
 
 ### Detail Buku (`/books/:id`)
 - Info buku (judul, penulis, cover placeholder)
