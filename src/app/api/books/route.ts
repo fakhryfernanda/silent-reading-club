@@ -1,11 +1,15 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url)
+    const typeFilter = searchParams.get('type')
+    const readerIdFilter = searchParams.get('readerId')
+
     // Get all books with their notes and readers
     const { data: books, error: booksError } = await supabase
       .from('books')
@@ -31,7 +35,7 @@ export async function GET() {
     if (booksError) throw booksError
 
     // Transform data to match the expected format
-    const transformedBooks = books?.map(book => {
+    let transformedBooks = books?.map(book => {
       const notes = book.notes as any[]
       const noteCount = notes?.length || 0
 
@@ -68,6 +72,18 @@ export async function GET() {
         readers: readers
       }
     })
+
+    // Apply type filter
+    if (typeFilter) {
+      transformedBooks = transformedBooks?.filter(book => book.type === typeFilter)
+    }
+
+    // Apply reader filter (books where this member has notes)
+    if (readerIdFilter) {
+      transformedBooks = transformedBooks?.filter(book =>
+        book.readers?.some((r: any) => r.id === readerIdFilter)
+      )
+    }
 
     // Sort by latest note date
     const sorted = transformedBooks?.sort((a, b) => {

@@ -103,7 +103,8 @@ silent-reading-club/
     │               └── [id]/
     │                   └── route.ts ← PATCH (konten) + DELETE catatan
     ├── components/
-    │   └── BookGrid.tsx             ← Grid buku (Client Component, preview plain text)
+    │   ├── BookGrid.tsx             ← Grid buku (Client Component, preview plain text)
+    │   └── BookFilters.tsx          ← Filter UI reusable (type chips + reader dropdown)
     └── lib/
         ├── db.ts                    ← Supabase client (singleton)
         ├── types.ts                 ← TypeScript types
@@ -154,6 +155,11 @@ CREATE TABLE notes (
 ### `GET /api/books`
 Mengembalikan semua buku beserta stats (jumlah pembaca, jumlah notes, preview notes terbaru, daftar readers).
 
+**Query params (opsional):**
+- `type` — Filter by tipe buku (e.g., `?type=Fiksi`)
+- `readerId` — Filter by pembaca (e.g., `?readerId=uuid`)
+- Bisa dikombinasikan: `?type=Nonfiksi&readerId=uuid`
+
 ### `GET /api/books/:id`
 Mengembalikan detail satu buku beserta semua notes-nya (dengan info member).
 
@@ -182,6 +188,10 @@ Semua endpoint admin memerlukan query param `?key=ADMIN_SECRET`. Tanpa key yang 
 | Method | Path | Aksi |
 |---|---|---|
 | GET | `/api/admin/data` | Semua members + books + notes sekaligus |
+| GET | `/api/admin/data?bookType=Fiksi` | Filter books by tipe |
+| GET | `/api/admin/data?bookReaderId=uuid` | Filter books by pembaca |
+| GET | `/api/admin/data?noteMemberId=uuid` | Filter notes by pembaca |
+| GET | `/api/admin/data?noteBookId=uuid` | Filter notes by buku |
 | POST | `/api/admin/members` | Tambah member baru |
 | PATCH | `/api/admin/members/:id` | Edit nama + nomor WA (validasi unique) |
 | DELETE | `/api/admin/members/:id` | Hapus member + semua catatannya (transaction) |
@@ -200,6 +210,9 @@ Semua endpoint admin memerlukan query param `?key=ADMIN_SECRET`. Tanpa key yang 
 - Daftar semua buku dalam grid
 - Tiap kartu: judul, penulis, avatar pembaca, jumlah notes, preview notes terbaru
 - Stats ringkas di header: jumlah buku, pembaca, catatan
+- **Filter buku**: filter by tipe (Fiksi, Nonfiksi, dll) dan by pembaca
+- Filter tersimpan di URL (`?type=Nonfiksi&reader=uuid`) — bisa di-share/bookmark
+- Tombol "Reset filter" untuk clear semua filter sekaligus
 
 ### Detail Buku (`/books/:id`)
 - Info buku (judul, penulis, cover placeholder)
@@ -210,8 +223,11 @@ Semua endpoint admin memerlukan query param `?key=ADMIN_SECRET`. Tanpa key yang 
 ### Halaman Admin (`/admin?key=SECRET`)
 - Tab Anggota: CRUD member, edit nama + nomor WA
 - Tab Buku: CRUD buku, edit judul + penulis
+  - **Filter**: by tipe buku dan by pembaca
 - Tab Catatan: CRUD catatan, edit konten dengan toggle Edit/Preview markdown
+  - **Filter**: by pembaca dan by buku
 - Proteksi via `ADMIN_SECRET` di env — key dikirim sebagai query param, divalidasi server-side
+- Filter di admin bersifat client-side (data difilter saat fetch dari API)
 
 ---
 
@@ -254,6 +270,8 @@ WAHA_API_KEY=                         # opsional, jika WAHA pakai API key
 - [x] Halaman admin (`/admin`) — full CRUD members, books, notes
 - [x] Render markdown di halaman detail buku
 - [x] `.gitignore` + environment setup (`.env`)
+- [x] Filter buku by tipe dan pembaca (homepage + admin)
+- [x] Filter catatan by pembaca dan buku (admin)
 - [ ] Deploy ke VPS
 
 ---

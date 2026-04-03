@@ -5,12 +5,18 @@ import Link from 'next/link'
 import { Book } from '@/lib/types'
 import { timeAgo, avatarColor, initials, stripMarkdown } from '@/lib/utils'
 
-export default function BookGrid() {
+export default function BookGrid({ typeFilter, readerFilter }: { typeFilter?: string | null, readerFilter?: string | null }) {
   const [books, setBooks] = useState<Book[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/books')
+    const params = new URLSearchParams()
+    if (typeFilter) params.set('type', typeFilter)
+    if (readerFilter) params.set('readerId', readerFilter)
+    
+    const url = `/api/books${params.toString() ? '?' + params.toString() : ''}`
+    
+    fetch(url)
       .then(res => res.json())
       .then(data => {
         setBooks(data)
@@ -20,7 +26,7 @@ export default function BookGrid() {
         console.error('Error fetching books:', err)
         setLoading(false)
       })
-  }, [])
+  }, [typeFilter, readerFilter])
 
   if (loading) {
     return (
@@ -33,7 +39,7 @@ export default function BookGrid() {
   if (books.length === 0) {
     return (
       <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', padding: '40px 0', marginBottom: 60 }}>
-        Belum ada buku. Kirim notes pertamamu via WhatsApp!
+        {typeFilter || readerFilter ? 'Tidak ada buku yang sesuai dengan filter.' : 'Belum ada buku. Kirim notes pertamamu via WhatsApp!'}
       </p>
     )
   }

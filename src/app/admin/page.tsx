@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { timeAgo, avatarColor, initials } from '@/lib/utils'
+import BookFilters from '@/components/BookFilters'
 
 type AdminMember = {
   id: string
@@ -19,6 +20,7 @@ type AdminBook = {
   type: string | null
   created_at: string
   note_count: number
+  readers?: { id: string; display_name: string }[]
 }
 
 type AdminNote = {
@@ -81,6 +83,13 @@ export default function AdminPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [notePreview, setNotePreview] = useState(false)
+  
+  // Filter states
+  const [bookTypeFilter, setBookTypeFilter] = useState<string | null>(null)
+  const [bookReaderFilter, setBookReaderFilter] = useState<string | null>(null)
+  const [noteMemberFilter, setNoteMemberFilter] = useState<string | null>(null)
+  const [noteBookFilter, setNoteBookFilter] = useState<string | null>(null)
+  
   const keyRef = useRef<string>('')
 
   useEffect(() => {
@@ -95,10 +104,23 @@ export default function AdminPage() {
     return () => clearTimeout(t)
   }, [errorMessage])
 
+  // Refetch when filters change
+  useEffect(() => {
+    if (!loading && data) {
+      fetchData()
+    }
+  }, [bookTypeFilter, bookReaderFilter, noteMemberFilter, noteBookFilter])
+
   async function fetchData() {
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/data?key=${keyRef.current}`)
+      const params = new URLSearchParams({ key: keyRef.current })
+      if (bookTypeFilter) params.set('bookType', bookTypeFilter)
+      if (bookReaderFilter) params.set('bookReaderId', bookReaderFilter)
+      if (noteMemberFilter) params.set('noteMemberId', noteMemberFilter)
+      if (noteBookFilter) params.set('noteBookId', noteBookFilter)
+      
+      const res = await fetch(`/api/admin/data?${params.toString()}`)
       if (res.status === 401) {
         setUnauthorized(true)
         return
@@ -379,7 +401,25 @@ export default function AdminPage() {
           {(['books', 'members', 'notes'] as Tab[]).map(t => (
             <button
               key={t}
-              onClick={() => { setTab(t); cancelEdit(); cancelDelete(); cancelAdd() }}
+              onClick={() => {
+                setTab(t)
+                cancelEdit()
+                cancelDelete()
+                cancelAdd()
+                // Reset filters when switching tabs
+                if (t === 'books') {
+                  setNoteMemberFilter(null)
+                  setNoteBookFilter(null)
+                } else if (t === 'notes') {
+                  setBookTypeFilter(null)
+                  setBookReaderFilter(null)
+                } else {
+                  setBookTypeFilter(null)
+                  setBookReaderFilter(null)
+                  setNoteMemberFilter(null)
+                  setNoteBookFilter(null)
+                }
+              }}
               style={{
                 ...btnBase,
                 padding: '6px 18px',
@@ -515,38 +555,59 @@ export default function AdminPage() {
         />
       )}
       {tab === 'books' && (
-        <BooksList
-          books={data.books}
-          editTarget={editTarget}
-          editValues={editValues}
-          deleteTarget={deleteTarget}
-          saving={saving}
-          onEdit={(id, vals) => startEdit('books', id, vals)}
-          onEditChange={setEditValues}
-          onSaveEdit={saveEdit}
-          onCancelEdit={cancelEdit}
-          onDelete={(id, label) => startDelete('books', id, label)}
-          onConfirmDelete={confirmDelete}
-          onCancelDelete={cancelDelete}
-        />
+        <>
+          <BookFilters
+            members={data.members}
+            selectedType={bookTypeFilter}
+            selectedReader={bookReaderFilter}
+            onTypeChange={setBookTypeFilter}
+            onReaderChange={setBookReaderFilter}
+          />
+          <BooksList
+            books={data.books}
+            editTarget={editTarget}
+            editValues={editValues}
+            deleteTarget={deleteTarget}
+            saving={saving}
+            hasActiveFilters={!!bookTypeFilter || !!bookReaderFilter}
+            onEdit={(id, vals) => startEdit('books', id, vals)}
+            onEditChange={setEditValues}
+            onSaveEdit={saveEdit}
+            onCancelEdit={cancelEdit}
+            onDelete={(id, label) => startDelete('books', id, label)}
+            onConfirmDelete={confirmDelete}
+            onCancelDelete={cancelDelete}
+          />
+        </>
       )}
       {tab === 'notes' && (
-        <NotesList
-          notes={data.notes}
-          editTarget={editTarget}
-          editValues={editValues}
-          deleteTarget={deleteTarget}
-          saving={saving}
-          notePreview={notePreview}
-          onTogglePreview={() => setNotePreview(p => !p)}
-          onEdit={(id, vals) => { startEdit('notes', id, vals); setNotePreview(false) }}
-          onEditChange={setEditValues}
-          onSaveEdit={saveEdit}
-          onCancelEdit={cancelEdit}
-          onDelete={(id, label) => startDelete('notes', id, label)}
-          onConfirmDelete={confirmDelete}
-          onCancelDelete={cancelDelete}
-        />
+        <>
+          <NotesFilter
+            members={data.members}
+            books={data.books}
+            selectedMember={noteMemberFilter}
+            selectedBook={noteBookFilter}
+            onMemberChange={setNoteMemberFilter}
+            onBookChange={setNoteBookFilter}
+          />
+          <NotesList
+            notes={data.notes}
+            editTarget={editTarget}
+            editValues={editValues}
+            deleteTarget={deleteTarget}
+            saving={saving}
+            notePreview={notePreview}
+            hasActiveFilters={!!noteMemberFilter || !!noteBookFilter}
+            onTogglePreview={() => setNotePreview(p => !p)}
+            onEdit={(id, vals) => { startEdit('notes', id, vals); setNotePreview(false) }}
+            onEditChange={setEditValues}
+            onSaveEdit={saveEdit}
+            onCancelEdit={cancelEdit}
+            onDelete={(id, label) => startDelete('notes', id, label)}
+            onConfirmDelete={confirmDelete}
+            onCancelDelete={cancelDelete}
+          />
+        </>
       )}
     </div>
   )
@@ -708,7 +769,7 @@ function MembersList({ members, editTarget, editValues, deleteTarget, saving, on
 }
 
 // ── BOOKS LIST ──────────────────────────────────────────
-function BooksList({ books, editTarget, editValues, deleteTarget, saving, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete }: {
+function BooksList({ books, editTarget, editValues, deleteTarget, saving, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete, hasActiveFilters }: {
   books: AdminBook[]
   editTarget: EditTarget
   editValues: Record<string, string>
@@ -721,9 +782,10 @@ function BooksList({ books, editTarget, editValues, deleteTarget, saving, onEdit
   onDelete: (id: string, label: string) => void
   onConfirmDelete: () => void
   onCancelDelete: () => void
+  hasActiveFilters?: boolean
 }) {
   if (books.length === 0) {
-    return <EmptyState text="Belum ada buku." />
+    return <EmptyState text={hasActiveFilters ? "Tidak ada buku yang sesuai dengan filter." : "Belum ada buku."} />
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -817,7 +879,7 @@ function BooksList({ books, editTarget, editValues, deleteTarget, saving, onEdit
 }
 
 // ── NOTES LIST ──────────────────────────────────────────
-function NotesList({ notes, editTarget, editValues, deleteTarget, saving, notePreview, onTogglePreview, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete }: {
+function NotesList({ notes, editTarget, editValues, deleteTarget, saving, notePreview, onTogglePreview, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete, hasActiveFilters }: {
   notes: AdminNote[]
   editTarget: EditTarget
   editValues: Record<string, string>
@@ -832,9 +894,10 @@ function NotesList({ notes, editTarget, editValues, deleteTarget, saving, notePr
   onDelete: (id: string, label: string) => void
   onConfirmDelete: () => void
   onCancelDelete: () => void
+  hasActiveFilters?: boolean
 }) {
   if (notes.length === 0) {
-    return <EmptyState text="Belum ada catatan." />
+    return <EmptyState text={hasActiveFilters ? "Tidak ada catatan yang sesuai dengan filter." : "Belum ada catatan."} />
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -944,6 +1007,92 @@ function NotesList({ notes, editTarget, editValues, deleteTarget, saving, notePr
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// ── NOTES FILTER ────────────────────────────────────────
+function NotesFilter({ members, books, selectedMember, selectedBook, onMemberChange, onBookChange }: {
+  members: AdminMember[]
+  books: AdminBook[]
+  selectedMember: string | null
+  selectedBook: string | null
+  onMemberChange: (id: string | null) => void
+  onBookChange: (id: string | null) => void
+}) {
+  const selectStyle: React.CSSProperties = {
+    fontFamily: 'Crimson Pro, serif',
+    fontSize: 15,
+    color: 'var(--brown-dark)',
+    background: 'var(--card-bg)',
+    border: '1px solid var(--border)',
+    borderRadius: 8,
+    padding: '4px 12px',
+    outline: 'none',
+    cursor: 'pointer',
+    minWidth: 200,
+  }
+
+  const hasActiveFilters = selectedMember || selectedBook
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            Pembaca:
+          </span>
+          <select
+            value={selectedMember || ''}
+            onChange={e => onMemberChange(e.target.value || null)}
+            style={selectStyle}
+          >
+            <option value="">Semua pembaca</option>
+            {members.map(m => (
+              <option key={m.id} value={m.id}>
+                {m.display_name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            Buku:
+          </span>
+          <select
+            value={selectedBook || ''}
+            onChange={e => onBookChange(e.target.value || null)}
+            style={selectStyle}
+          >
+            <option value="">Semua buku</option>
+            {books.map(b => (
+              <option key={b.id} value={b.id}>
+                {b.title}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {hasActiveFilters && (
+          <button
+            onClick={() => { onMemberChange(null); onBookChange(null) }}
+            style={{
+              fontFamily: 'Lora, serif',
+              fontSize: 12,
+              padding: '4px 12px',
+              borderRadius: 999,
+              border: '1px solid var(--amber)',
+              background: 'transparent',
+              color: 'var(--amber)',
+              cursor: 'pointer',
+              marginLeft: 'auto',
+            }}
+          >
+            Reset filter
+          </button>
+        )}
+      </div>
     </div>
   )
 }

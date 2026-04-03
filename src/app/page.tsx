@@ -1,52 +1,108 @@
+'use client'
+
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import BookGrid from '@/components/BookGrid'
-import { supabase } from '@/lib/db'
+import BookFilters from '@/components/BookFilters'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
-
-async function getStats() {
-  try {
-    const { data: books, error } = await supabase
-      .from('books')
-      .select(`
-        id,
-        notes (
-          id,
-          members:member_id (
-            id
-          )
-        )
-      `)
-
-    if (error) throw error
-
-    const totalBooks = books?.length || 0
-    const totalNotes = books?.reduce((sum, book) => sum + (book.notes?.length || 0), 0) || 0
-    const allReaders = new Set(
-      books?.flatMap(book => 
-        (book.notes || [])
-          .map((note: any) => note.members?.id)
-          .filter(Boolean)
-      ) || []
-    )
-
-    return {
-      totalBooks,
-      totalNotes,
-      totalReaders: allReaders.size
-    }
-  } catch (err) {
-    console.error('Error fetching stats:', err)
-    return {
-      totalBooks: 0,
-      totalNotes: 0,
-      totalReaders: 0
-    }
-  }
+type Stats = {
+  totalBooks: number
+  totalNotes: number
+  totalReaders: number
 }
 
-export default async function HomePage() {
-  const stats = await getStats()
+type Member = {
+  id: string
+  display_name: string
+}
+
+function HomePageContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [members, setMembers] = useState<Member[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const selectedType = searchParams.get('type')
+  const selectedReader = searchParams.get('reader')
+
+  useEffect(() => {
+    // Fetch stats and members
+    fetch('/api/books')
+      .then(res => res.json())
+      .then(books => {
+        const totalBooks = books.length
+        const totalNotes = books.reduce((sum: number, book: any) => sum + book.note_count, 0)
+        const allReaders = new Set(
+          books.flatMap((book: any) => 
+            (book.readers || []).map((r: any) => r.id)
+          )
+        )
+        
+        setStats({
+          totalBooks,
+          totalNotes,
+          totalReaders: allReaders.size
+        })
+
+        // Extract unique members from books
+        const memberMap = new Map<string, Member>()
+        books.forEach((book: any) => {
+          (book.readers || []).forEach((reader: any) => {
+            if (!memberMap.has(reader.id)) {
+              memberMap.set(reader.id, {
+                id: reader.id,
+                display_name: reader.display_name
+              })
+            }
+          })
+        })
+        setMembers(Array.from(memberMap.values()).sort((a, b) => 
+          a.display_name.localeCompare(b.display_name)
+        ))
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Error fetching stats:', err)
+        setStats({ totalBooks: 0, totalNotes: 0, totalReaders: 0 })
+        setLoading(false)
+      })
+  }, [])
+
+  const handleTypeChange = (type: string | null) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (type) {
+      params.set('type', type)
+    } else {
+      params.delete('type')
+    }
+    router.push(`?${params.toString()}`)
+  }
+
+  const handleReaderChange = (readerId: string | null) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (readerId) {
+      params.set('reader', readerId)
+    } else {
+      params.delete('reader')
+    }
+    router.push(`?${params.toString()}`)
+  }
+
+  const handleReset = () => {
+    router.push('/')
+  }
+
+  if (loading || !stats) {
+    return (
+      <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px' }}>
+        <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', padding: '40px 0' }}>
+          Memuat...
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px' }}>
@@ -82,7 +138,16 @@ export default async function HomePage() {
         <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
 
-      <BookGrid />
+      <BookFilters
+        selectedType={selectedType}
+        selectedReader={selectedReader}
+        members={members}
+        onTypeChange={handleTypeChange}
+        onReaderChange={handleReaderChange}
+        onReset={handleReset}
+      />
+
+      <BookGrid typeFilter={selectedType} readerFilter={selectedReader} />
 
       <footer style={{ borderTop: '1px solid var(--border)', padding: '28px 0', textAlign: 'center' }}>
         <div style={{ fontFamily: 'Lora, serif', fontStyle: 'italic', fontSize: 16, color: 'var(--brown-mid)' }}>
@@ -91,5 +156,19 @@ export default async function HomePage() {
         <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6 }}>— C.S. Lewis</div>
       </footer>
     </div>
+  )
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={
+      <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px' }}>
+        <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', padding: '40px 0' }}>
+          Memuat...
+        </p>
+      </div>
+    }>
+      <HomePageContent />
+    </Suspense>
   )
 }

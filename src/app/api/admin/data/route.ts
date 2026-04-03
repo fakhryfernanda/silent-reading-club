@@ -15,6 +15,12 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    const { searchParams } = new URL(req.url)
+    const bookTypeFilter = searchParams.get('bookType')
+    const bookReaderFilter = searchParams.get('bookReaderId')
+    const noteMemberFilter = searchParams.get('noteMemberId')
+    const noteBookFilter = searchParams.get('noteBookId')
+
     // Get members with note count
     const { data: membersData, error: membersError } = await supabase
       .from('members')
@@ -22,7 +28,7 @@ export async function GET(req: NextRequest) {
         *,
         notes:notes(member_id)
       `)
-      .order('created_at', { ascending: false })
+      .order('display_name', { ascending: true })
 
     if (membersError) throw membersError
 
@@ -52,9 +58,21 @@ export async function GET(req: NextRequest) {
     if (booksError) throw booksError
 
     // Transform books with same logic as /api/books endpoint
-    const books = booksData?.map(book => {
+    let books = booksData?.map(book => {
       const notes = book.notes as any[]
       const noteCount = notes?.length || 0
+
+      // Get unique readers for filtering
+      const readers = notes?.reduce((acc: any[], note: any) => {
+        const member = note.members
+        if (member && !acc.find(r => r.id === member.id)) {
+          acc.push({
+            id: member.id,
+            display_name: member.display_name
+          })
+        }
+        return acc
+      }, []) || []
 
       // Get latest note for sorting
       const sortedNotes = notes?.sort((a: any, b: any) =>
@@ -66,9 +84,22 @@ export async function GET(req: NextRequest) {
         ...book,
         note_count: noteCount,
         latest_note_at: latestNote?.created_at || null,
+        readers,
         notes: undefined
       }
     })
+
+    // Apply book type filter
+    if (bookTypeFilter) {
+      books = books?.filter(book => book.type === bookTypeFilter)
+    }
+
+    // Apply book reader filter (books where this member has notes)
+    if (bookReaderFilter) {
+      books = books?.filter(book =>
+        book.readers?.some((r: any) => r.id === bookReaderFilter)
+      )
+    }
 
     // Sort by latest_note_at DESC (same as /api/books)
     const sortedBooks = books?.sort((a, b) => {
@@ -78,7 +109,7 @@ export async function GET(req: NextRequest) {
     })
 
     // Get notes with member and book info
-    const { data: notesData, error: notesError } = await supabase
+    let { data: notesData, error: notesError } = await supabase
       .from('notes')
       .select(`
         *,
@@ -88,6 +119,16 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false })
 
     if (notesError) throw notesError
+
+    // Apply note member filter
+    if (noteMemberFilter) {
+      notesData = (notesData || []).filter((n: any) => n.member_id === noteMemberFilter)
+    }
+
+    // Apply note book filter
+    if (noteBookFilter) {
+      notesData = (notesData || []).filter((n: any) => n.book_id === noteBookFilter)
+    }
 
     const notes = notesData?.map((n: any) => ({
       ...n,
