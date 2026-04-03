@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Book } from '@/lib/types'
 import { timeAgo, avatarColor, initials, stripMarkdown } from '@/lib/utils'
 
-export default function BookGrid({ typeFilter, readerFilter }: { typeFilter?: string | null, readerFilter?: string | null }) {
+export default function BookGrid({ typeFilter, readerFilter, titleFilter }: { typeFilter?: string | null, readerFilter?: string | null, titleFilter?: string | null }) {
   const [books, setBooks] = useState<Book[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -13,6 +13,7 @@ export default function BookGrid({ typeFilter, readerFilter }: { typeFilter?: st
     const params = new URLSearchParams()
     if (typeFilter) params.set('type', typeFilter)
     if (readerFilter) params.set('readerId', readerFilter)
+    if (titleFilter) params.set('title', titleFilter)
     
     const url = `/api/books${params.toString() ? '?' + params.toString() : ''}`
     
@@ -26,7 +27,7 @@ export default function BookGrid({ typeFilter, readerFilter }: { typeFilter?: st
         console.error('Error fetching books:', err)
         setLoading(false)
       })
-  }, [typeFilter, readerFilter])
+  }, [typeFilter, readerFilter, titleFilter])
 
   if (loading) {
     return (
@@ -39,7 +40,7 @@ export default function BookGrid({ typeFilter, readerFilter }: { typeFilter?: st
   if (books.length === 0) {
     return (
       <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', padding: '40px 0', marginBottom: 60 }}>
-        {typeFilter || readerFilter ? 'Tidak ada buku yang sesuai dengan filter.' : 'Belum ada buku. Kirim notes pertamamu via WhatsApp!'}
+        {typeFilter || readerFilter || titleFilter ? 'Tidak ada buku yang sesuai dengan filter.' : 'Belum ada buku. Kirim notes pertamamu via WhatsApp!'}
       </p>
     )
   }

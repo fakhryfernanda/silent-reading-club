@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const typeFilter = searchParams.get('type')
     const readerIdFilter = searchParams.get('readerId')
+    const titleFilter = searchParams.get('title')
 
     // Get all books with their notes and readers
     const { data: books, error: booksError } = await supabase
@@ -83,6 +84,15 @@ export async function GET(req: NextRequest) {
       transformedBooks = transformedBooks?.filter(book =>
         book.readers?.some((r: any) => r.id === readerIdFilter)
       )
+    }
+
+    // Apply title filter (per-word matching, case-insensitive)
+    if (titleFilter) {
+      const words = titleFilter.toLowerCase().split(/\s+/).filter(Boolean)
+      transformedBooks = transformedBooks?.filter(book => {
+        const title = (book.title || '').toLowerCase()
+        return words.every(word => title.includes(word))
+      })
     }
 
     // Sort by latest note date

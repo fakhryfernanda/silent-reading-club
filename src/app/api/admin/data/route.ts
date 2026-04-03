@@ -18,8 +18,10 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const bookTypeFilter = searchParams.get('bookType')
     const bookReaderFilter = searchParams.get('bookReaderId')
+    const bookTitleFilter = searchParams.get('bookTitle')
     const noteMemberFilter = searchParams.get('noteMemberId')
     const noteBookFilter = searchParams.get('noteBookId')
+    const noteBookTitleFilter = searchParams.get('noteBookTitle')
 
     // Get members with note count
     const { data: membersData, error: membersError } = await supabase
@@ -101,6 +103,15 @@ export async function GET(req: NextRequest) {
       )
     }
 
+    // Apply title filter (per-word matching, case-insensitive)
+    if (bookTitleFilter) {
+      const words = bookTitleFilter.toLowerCase().split(/\s+/).filter(Boolean)
+      books = books?.filter(book => {
+        const title = (book.title || '').toLowerCase()
+        return words.every(word => title.includes(word))
+      })
+    }
+
     // Sort by latest_note_at DESC (same as /api/books)
     const sortedBooks = books?.sort((a, b) => {
       if (!a.latest_note_at) return 1
@@ -128,6 +139,15 @@ export async function GET(req: NextRequest) {
     // Apply note book filter
     if (noteBookFilter) {
       notesData = (notesData || []).filter((n: any) => n.book_id === noteBookFilter)
+    }
+
+    // Apply note book title filter (per-word matching, case-insensitive)
+    if (noteBookTitleFilter) {
+      const words = noteBookTitleFilter.toLowerCase().split(/\s+/).filter(Boolean)
+      notesData = (notesData || []).filter((n: any) => {
+        const title = (n.books?.title || '').toLowerCase()
+        return words.every(word => title.includes(word))
+      })
     }
 
     const notes = notesData?.map((n: any) => ({

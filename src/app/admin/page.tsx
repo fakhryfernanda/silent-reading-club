@@ -87,8 +87,10 @@ export default function AdminPage() {
   // Filter states
   const [bookTypeFilter, setBookTypeFilter] = useState<string | null>(null)
   const [bookReaderFilter, setBookReaderFilter] = useState<string | null>(null)
+  const [bookTitleFilter, setBookTitleFilter] = useState<string | null>(null)
   const [noteMemberFilter, setNoteMemberFilter] = useState<string | null>(null)
   const [noteBookFilter, setNoteBookFilter] = useState<string | null>(null)
+  const [noteBookTitleFilter, setNoteBookTitleFilter] = useState<string | null>(null)
   
   const keyRef = useRef<string>('')
 
@@ -109,7 +111,7 @@ export default function AdminPage() {
     if (!loading && data) {
       fetchData()
     }
-  }, [bookTypeFilter, bookReaderFilter, noteMemberFilter, noteBookFilter])
+  }, [bookTypeFilter, bookReaderFilter, bookTitleFilter, noteMemberFilter, noteBookFilter, noteBookTitleFilter])
 
   async function fetchData() {
     setLoading(true)
@@ -117,8 +119,10 @@ export default function AdminPage() {
       const params = new URLSearchParams({ key: keyRef.current })
       if (bookTypeFilter) params.set('bookType', bookTypeFilter)
       if (bookReaderFilter) params.set('bookReaderId', bookReaderFilter)
+      if (bookTitleFilter) params.set('bookTitle', bookTitleFilter)
       if (noteMemberFilter) params.set('noteMemberId', noteMemberFilter)
       if (noteBookFilter) params.set('noteBookId', noteBookFilter)
+      if (noteBookTitleFilter) params.set('noteBookTitle', noteBookTitleFilter)
       
       const res = await fetch(`/api/admin/data?${params.toString()}`)
       if (res.status === 401) {
@@ -410,14 +414,18 @@ export default function AdminPage() {
                 if (t === 'books') {
                   setNoteMemberFilter(null)
                   setNoteBookFilter(null)
+                  setNoteBookTitleFilter(null)
                 } else if (t === 'notes') {
                   setBookTypeFilter(null)
                   setBookReaderFilter(null)
+                  setBookTitleFilter(null)
                 } else {
                   setBookTypeFilter(null)
                   setBookReaderFilter(null)
+                  setBookTitleFilter(null)
                   setNoteMemberFilter(null)
                   setNoteBookFilter(null)
+                  setNoteBookTitleFilter(null)
                 }
               }}
               style={{
@@ -560,8 +568,10 @@ export default function AdminPage() {
             members={data.members}
             selectedType={bookTypeFilter}
             selectedReader={bookReaderFilter}
+            selectedTitle={bookTitleFilter}
             onTypeChange={setBookTypeFilter}
             onReaderChange={setBookReaderFilter}
+            onTitleChange={setBookTitleFilter}
           />
           <BooksList
             books={data.books}
@@ -569,7 +579,7 @@ export default function AdminPage() {
             editValues={editValues}
             deleteTarget={deleteTarget}
             saving={saving}
-            hasActiveFilters={!!bookTypeFilter || !!bookReaderFilter}
+            hasActiveFilters={!!bookTypeFilter || !!bookReaderFilter || !!bookTitleFilter}
             onEdit={(id, vals) => startEdit('books', id, vals)}
             onEditChange={setEditValues}
             onSaveEdit={saveEdit}
@@ -587,8 +597,10 @@ export default function AdminPage() {
             books={data.books}
             selectedMember={noteMemberFilter}
             selectedBook={noteBookFilter}
+            selectedBookTitle={noteBookTitleFilter}
             onMemberChange={setNoteMemberFilter}
             onBookChange={setNoteBookFilter}
+            onBookTitleChange={setNoteBookTitleFilter}
           />
           <NotesList
             notes={data.notes}
@@ -597,7 +609,7 @@ export default function AdminPage() {
             deleteTarget={deleteTarget}
             saving={saving}
             notePreview={notePreview}
-            hasActiveFilters={!!noteMemberFilter || !!noteBookFilter}
+            hasActiveFilters={!!noteMemberFilter || !!noteBookFilter || !!noteBookTitleFilter}
             onTogglePreview={() => setNotePreview(p => !p)}
             onEdit={(id, vals) => { startEdit('notes', id, vals); setNotePreview(false) }}
             onEditChange={setEditValues}
@@ -1012,14 +1024,29 @@ function NotesList({ notes, editTarget, editValues, deleteTarget, saving, notePr
 }
 
 // ── NOTES FILTER ────────────────────────────────────────
-function NotesFilter({ members, books, selectedMember, selectedBook, onMemberChange, onBookChange }: {
+function NotesFilter({ members, books, selectedMember, selectedBook, selectedBookTitle, onMemberChange, onBookChange, onBookTitleChange }: {
   members: AdminMember[]
   books: AdminBook[]
   selectedMember: string | null
   selectedBook: string | null
+  selectedBookTitle: string | null
   onMemberChange: (id: string | null) => void
   onBookChange: (id: string | null) => void
+  onBookTitleChange: (title: string | null) => void
 }) {
+  const [inputValue, setInputValue] = useState(selectedBookTitle || '')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onBookTitleChange(inputValue.trim() || null)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [inputValue, onBookTitleChange])
+
+  useEffect(() => {
+    setInputValue(selectedBookTitle || '')
+  }, [selectedBookTitle])
+
   const selectStyle: React.CSSProperties = {
     fontFamily: 'Crimson Pro, serif',
     fontSize: 15,
@@ -1033,11 +1060,52 @@ function NotesFilter({ members, books, selectedMember, selectedBook, onMemberCha
     minWidth: 200,
   }
 
-  const hasActiveFilters = selectedMember || selectedBook
+  const hasActiveFilters = selectedMember || selectedBook || selectedBookTitle
 
   return (
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
+        {/* Book title search */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
+          <span style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            Judul Buku:
+          </span>
+          <input
+            type="text"
+            value={inputValue}
+            onChange={e => setInputValue(e.target.value)}
+            placeholder="Cari judul buku..."
+            style={{
+              fontFamily: 'Crimson Pro, serif',
+              fontSize: 15,
+              color: 'var(--brown-dark)',
+              background: 'var(--card-bg)',
+              border: selectedBookTitle ? '1px solid var(--amber)' : '1px solid var(--border)',
+              borderRadius: 8,
+              padding: '4px 12px',
+              outline: 'none',
+              width: 200,
+            }}
+          />
+          {selectedBookTitle && (
+            <button
+              onClick={() => setInputValue('')}
+              style={{
+                position: 'absolute',
+                right: 8,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 14,
+                color: 'var(--text-muted)',
+                padding: 2,
+              }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             Pembaca:
@@ -1076,7 +1144,7 @@ function NotesFilter({ members, books, selectedMember, selectedBook, onMemberCha
 
         {hasActiveFilters && (
           <button
-            onClick={() => { onMemberChange(null); onBookChange(null) }}
+            onClick={() => { onMemberChange(null); onBookChange(null); onBookTitleChange(null) }}
             style={{
               fontFamily: 'Lora, serif',
               fontSize: 12,

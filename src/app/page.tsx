@@ -26,6 +26,7 @@ function HomePageContent() {
 
   const selectedType = searchParams.get('type')
   const selectedReader = searchParams.get('reader')
+  const selectedTitle = searchParams.get('title')
 
   useEffect(() => {
     // Fetch stats and members
@@ -90,6 +91,16 @@ function HomePageContent() {
     router.push(`?${params.toString()}`)
   }
 
+  const handleTitleChange = (title: string | null) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (title) {
+      params.set('title', title)
+    } else {
+      params.delete('title')
+    }
+    router.push(`?${params.toString()}`)
+  }
+
   const handleReset = () => {
     router.push('/')
   }
@@ -141,13 +152,15 @@ function HomePageContent() {
       <BookFilters
         selectedType={selectedType}
         selectedReader={selectedReader}
+        selectedTitle={selectedTitle}
         members={members}
         onTypeChange={handleTypeChange}
         onReaderChange={handleReaderChange}
+        onTitleChange={handleTitleChange}
         onReset={handleReset}
       />
 
-      <BookGrid typeFilter={selectedType} readerFilter={selectedReader} />
+      <BookGrid typeFilter={selectedType} readerFilter={selectedReader} titleFilter={selectedTitle} />
 
       <footer style={{ borderTop: '1px solid var(--border)', padding: '28px 0', textAlign: 'center' }}>
         <div style={{ fontFamily: 'Lora, serif', fontStyle: 'italic', fontSize: 16, color: 'var(--brown-mid)' }}>

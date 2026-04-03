@@ -158,7 +158,8 @@ Mengembalikan semua buku beserta stats (jumlah pembaca, jumlah notes, preview no
 **Query params (opsional):**
 - `type` — Filter by tipe buku (e.g., `?type=Fiksi`)
 - `readerId` — Filter by pembaca (e.g., `?readerId=uuid`)
-- Bisa dikombinasikan: `?type=Nonfiksi&readerId=uuid`
+- `title` — Filter by judul buku (live search, per-word matching, e.g., `?title=atomic+habits`)
+- Bisa dikombinasikan: `?type=Nonfiksi&readerId=uuid&title=atomic`
 
 ### `GET /api/books/:id`
 Mengembalikan detail satu buku beserta semua notes-nya (dengan info member).
@@ -190,8 +191,10 @@ Semua endpoint admin memerlukan query param `?key=ADMIN_SECRET`. Tanpa key yang 
 | GET | `/api/admin/data` | Semua members + books + notes sekaligus |
 | GET | `/api/admin/data?bookType=Fiksi` | Filter books by tipe |
 | GET | `/api/admin/data?bookReaderId=uuid` | Filter books by pembaca |
+| GET | `/api/admin/data?bookTitle=atomic` | Filter books by judul (live search) |
 | GET | `/api/admin/data?noteMemberId=uuid` | Filter notes by pembaca |
 | GET | `/api/admin/data?noteBookId=uuid` | Filter notes by buku |
+| GET | `/api/admin/data?noteBookTitle=atomic` | Filter notes by judul buku (live search) |
 | POST | `/api/admin/members` | Tambah member baru |
 | PATCH | `/api/admin/members/:id` | Edit nama + nomor WA (validasi unique) |
 | DELETE | `/api/admin/members/:id` | Hapus member + semua catatannya (transaction) |
@@ -210,8 +213,8 @@ Semua endpoint admin memerlukan query param `?key=ADMIN_SECRET`. Tanpa key yang 
 - Daftar semua buku dalam grid
 - Tiap kartu: judul, penulis, avatar pembaca, jumlah notes, preview notes terbaru
 - Stats ringkas di header: jumlah buku, pembaca, catatan
-- **Filter buku**: filter by tipe (Fiksi, Nonfiksi, dll) dan by pembaca
-- Filter tersimpan di URL (`?type=Nonfiksi&reader=uuid`) — bisa di-share/bookmark
+- **Filter buku**: filter by tipe (Fiksi, Nonfiksi, dll), by pembaca, dan pencarian judul buku (live search)
+- Filter tersimpan di URL (`?type=Nonfiksi&reader=uuid&title=atomic`) — bisa di-share/bookmark
 - Tombol "Reset filter" untuk clear semua filter sekaligus
 
 ### Detail Buku (`/books/:id`)
@@ -223,9 +226,9 @@ Semua endpoint admin memerlukan query param `?key=ADMIN_SECRET`. Tanpa key yang 
 ### Halaman Admin (`/admin?key=SECRET`)
 - Tab Anggota: CRUD member, edit nama + nomor WA
 - Tab Buku: CRUD buku, edit judul + penulis
-  - **Filter**: by tipe buku dan by pembaca
+  - **Filter**: by tipe buku, by pembaca, dan pencarian judul (live search)
 - Tab Catatan: CRUD catatan, edit konten dengan toggle Edit/Preview markdown
-  - **Filter**: by pembaca dan by buku
+  - **Filter**: by pembaca, by buku, dan pencarian judul buku (live search)
 - Proteksi via `ADMIN_SECRET` di env — key dikirim sebagai query param, divalidasi server-side
 - Filter di admin bersifat client-side (data difilter saat fetch dari API)
 
