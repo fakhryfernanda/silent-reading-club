@@ -9,7 +9,16 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter }: { ty
   const [allBooks, setAllBooks] = useState<Book[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [loading, setLoading] = useState(true)
-  const limit = 6
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  const limit = isMobile ? 4 : 6
 
   useEffect(() => {
     const params = new URLSearchParams()
@@ -32,6 +41,11 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter }: { ty
         setLoading(false)
       })
   }, [typeFilter, readerFilter, titleFilter])
+
+  // Reset to page 1 when switching between mobile/desktop
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [isMobile])
 
   // Client-side pagination
   const totalPages = Math.ceil(allBooks.length / limit)

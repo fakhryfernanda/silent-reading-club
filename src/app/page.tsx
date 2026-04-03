@@ -118,12 +118,12 @@ function HomePageContent() {
   return (
     <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px' }}>
 
-      <header style={{ padding: '48px 0 32px', borderBottom: '1px solid var(--border)', marginBottom: 32 }}>
-        <h1 style={{ fontFamily: 'Lora, serif', fontSize: 52, fontWeight: 600, color: 'var(--brown-dark)', lineHeight: 1.1, marginBottom: 12 }}>
-          Silent Reading Space
+      <header style={{ padding: '48px 0 32px', borderBottom: '1px solid var(--border)', marginBottom: 32 }} className="homepage-header">
+        <h1 style={{ fontFamily: 'Lora, serif', fontSize: 52, fontWeight: 600, color: 'var(--brown-dark)', lineHeight: 1.1, marginBottom: 12 }} className="homepage-heading">
+          Silent Reading Insights
         </h1>
         <p style={{ fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic', fontFamily: 'Lora, serif' }}>
-          Kumpulan catatan dari setiap sesi
+          Mengubah literasi menjadi inspirasi
         </p>
         <div style={{ display: 'flex', gap: 32, marginTop: 24 }}>
           {[

@@ -20,6 +20,19 @@ export default function BookPage() {
   const [activeReader, setActiveReader] = useState<string>('semua')
   const [loading, setLoading] = useState(true)
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set())
+  const [showBackToTop, setShowBackToTop] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 400)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const toggleNote = (noteId: string) => {
     setExpandedNotes(prev => {
@@ -99,7 +112,7 @@ export default function BookPage() {
         {/* Meta */}
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: 'Lora, serif', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--amber)', marginBottom: 8 }}>
-            Silent Reading Space
+            Silent Reading Insights
           </div>
           <h1 style={{ fontFamily: 'Lora, serif', fontSize: 32, fontWeight: 600, color: 'var(--brown-dark)', lineHeight: 1.2, marginBottom: 6 }}>
             {book.title}
@@ -274,6 +287,31 @@ export default function BookPage() {
         </div>
         <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6 }}>— C.S. Lewis</div>
       </footer>
+
+      {/* Back to Top Button */}
+      <button
+        onClick={scrollToTop}
+        style={{
+          position: 'fixed',
+          bottom: 32,
+          right: 32,
+          padding: '10px 20px',
+          fontSize: 14,
+          fontFamily: 'Lora, serif',
+          color: showBackToTop ? '#fff' : 'var(--amber)',
+          background: showBackToTop ? 'var(--amber)' : 'var(--card-bg)',
+          border: '1px solid var(--amber)',
+          borderRadius: 999,
+          cursor: 'pointer',
+          transition: 'all 0.25s',
+          opacity: showBackToTop ? 1 : 0,
+          pointerEvents: showBackToTop ? 'auto' : 'none',
+          boxShadow: showBackToTop ? '0 4px 12px rgba(44,26,14,0.15)' : 'none',
+          zIndex: 100,
+        }}
+      >
+        ↑ Kembali ke atas
+      </button>
     </div>
   )
 }

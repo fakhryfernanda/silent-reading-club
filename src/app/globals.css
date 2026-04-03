@@ -113,3 +113,15 @@ a {
 .note-content h1 { font-size: 1.2em; }
 .note-content h2 { font-size: 1.1em; }
 .note-content h3 { font-size: 1em; }
+
+/* Homepage header mobile responsive */
+@media (max-width: 768px) {
+  .homepage-header {
+    padding: 24px 0 24px !important;
+    margin-bottom: 24px !important;
+  }
+  
+  .homepage-heading {
+    font-size: 36px !important;
+  }
+}

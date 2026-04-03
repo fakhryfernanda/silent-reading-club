@@ -1,4 +1,4 @@
-# CLAUDE.md — Silent Reading Space
+# CLAUDE.md — Silent Reading Insights
 
 Dokumen ini berisi konteks lengkap project untuk AI agent. Baca seluruhnya sebelum membantu.
 
@@ -6,7 +6,7 @@ Dokumen ini berisi konteks lengkap project untuk AI agent. Baca seluruhnya sebel
 
 ## Gambaran Project
 
-**Silent Reading Space** adalah website + bot WhatsApp untuk komunitas baca internal. Anggota grup WA bisa tag bot untuk menyimpan notes bacaan mereka, dan notes tersebut otomatis muncul di website.
+**Silent Reading Insights** adalah website + bot WhatsApp untuk komunitas baca internal. Anggota grup WA bisa tag bot untuk menyimpan notes bacaan mereka, dan notes tersebut otomatis muncul di website.
 
 **Masalah yang diselesaikan:**
 - Chat dan diskusi di WA gampang tenggelam dan terlupakan
@@ -161,7 +161,7 @@ Mengembalikan semua buku beserta stats (jumlah pembaca, jumlah notes, preview no
 - `title` — Filter by judul buku (live search, per-word matching, e.g., `?title=atomic+habits`)
 - Bisa dikombinasikan: `?type=Nonfiksi&readerId=uuid&title=atomic`
 
-> **Catatan:** Pagination dilakukan di frontend (client-side). API mengembalikan semua buku yang sudah difilter. BookGrid component melakukan slice array untuk menampilkan 6 buku per halaman.
+> **Catatan:** Pagination dilakukan di frontend (client-side). API mengembalikan semua buku yang sudah difilter. BookGrid component melakukan slice array untuk menampilkan 6 buku per halaman (desktop) atau 4 buku per halaman (mobile).
 
 ### `GET /api/books/:id`
 Mengembalikan detail satu buku beserta semua notes-nya (dengan info member).
@@ -212,14 +212,14 @@ Semua endpoint admin memerlukan query param `?key=ADMIN_SECRET`. Tanpa key yang 
 ## Halaman Website
 
 ### Homepage (`/`)
-- Header: "Silent Reading Space" + subtitle "Kumpulan catatan dari setiap sesi"
-- Daftar semua buku dalam grid (pagination: 6 buku per halaman)
+- Header: "Silent Reading Insights" + subtitle "Mengubah literasi menjadi inspirasi"
+- Daftar semua buku dalam grid (pagination: 6 buku per halaman desktop, 4 di mobile)
 - Tiap kartu: judul, penulis, tag tipe, avatar pembaca, jumlah notes, preview notes terbaru
 - Stats ringkas di header: jumlah buku, pembaca, catatan
 - **Filter buku**: baris atas = filter judul (kiri) + filter pembaca (kanan), baris bawah = filter tipe (chips)
 - Filter tersimpan di URL (`?type=Nonfiksi&reader=uuid&title=atomic`) — bisa di-share/bookmark
 - Tombol "Reset filter" untuk clear semua filter sekaligus
-- **Pagination**: client-side, default 6 buku per halaman, tombol "Sebelumnya" / "Selanjutnya" + tombol nomor halaman (lingkaran)
+- **Pagination**: client-side, default 6 buku per halaman (desktop) atau 4 (mobile), tombol "Sebelumnya" / "Selanjutnya" + tombol nomor halaman (lingkaran)
 
 ### Detail Buku (`/books/:id`)
 - Info buku (judul, penulis, cover placeholder)
@@ -256,8 +256,8 @@ Semua endpoint admin memerlukan query param `?key=ADMIN_SECRET`. Tanpa key yang 
 
 **Header Homepage:**
 - Label atas dihapus (tidak ada "Silent Reading Club" kecil di atas)
-- Judul utama: `Silent Reading Space` (paling menonjol, 52px, Lora 600)
-- Subtitle: `Kumpulan catatan dari setiap sesi` (italic, 18px, Lora)
+- Judul utama: `Silent Reading Insights` (paling menonjol, 52px desktop / 36px mobile, Lora 600)
+- Subtitle: `Mengubah literasi menjadi inspirasi` (italic, 18px, Lora)
 - Tagline "Buku yang sedang dibaca" + garis pengiring dihapus
 - Spacing header dikurangi: padding `48px 0 32px`, marginBottom `32px`
 
@@ -307,9 +307,9 @@ WAHA_API_KEY=                         # opsional, jika WAHA pakai API key
 ## Riwayat Perubahan UI
 
 ### 2025-04-03
-- Rebrand: "Silent Reading Club" → "Silent Reading Space"
+- Rebrand: "Silent Reading Club" → "Silent Reading Insights"
 - Hapus label atas di header homepage
-- Judul: "Silent Reading Space", subtitle: "Kumpulan catatan dari setiap sesi"
+- Judul: "Silent Reading Insights", subtitle: "Mengubah literasi menjadi inspirasi"
 - Hapus tagline "Buku yang sedang dibaca" + garis
 - Pindah tag tipe dari samping judul ke bawah penulis
 - Filter layout: judul (kiri) + pembaca (kanan) di baris atas, tipe di baris bawah

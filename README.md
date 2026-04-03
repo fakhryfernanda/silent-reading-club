@@ -1,4 +1,4 @@
-# Silent Reading Space
+# Silent Reading Insights
 
 Website + bot WhatsApp untuk komunitas baca. Tag bot di WhatsApp, notes bacaan kamu langsung tersimpan dan tampil di website.
 
@@ -9,7 +9,7 @@ Website + bot WhatsApp untuk komunitas baca. Tag bot di WhatsApp, notes bacaan k
 - 👥 **Multi-reader** — Lihat catatan dari berbagai pembaca untuk buku yang sama
 - 📖 **Collapse notes** — Notes panjang auto-truncate, klik "Baca selengkapnya" untuk expand
 - 🔍 **Filter** — Filter buku by tipe (Fiksi, Nonfiksi, dll), by pembaca, dan pencarian judul (live search)
-- 📄 **Pagination** — 6 buku per halaman, navigasi client-side
+- 📄 **Pagination** — 6 buku per halaman (desktop) / 4 (mobile), navigasi client-side
 - 🎨 **Markdown support** — Format notes dengan markdown (bold, italic, list, dll)
 
 ## Setup
@@ -59,8 +59,8 @@ Website buka di [http://localhost:3000](http://localhost:3000)
 
 ### Website
 
-- **Homepage** — Lihat semua buku dan notes terbaru (pagination: 6 buku per halaman)
-  - Header: "Silent Reading Space" + subtitle "Kumpulan catatan dari setiap sesi"
+- **Homepage** — Lihat semua buku dan notes terbaru (pagination: 6 buku per halaman desktop, 4 di mobile)
+  - Header: "Silent Reading Insights" + subtitle "Mengubah literasi menjadi inspirasi"
   - **Filter by tipe** — Fiksi, Nonfiksi, Komik, Artikel, Jurnal, Kitab Suci
   - **Filter by pembaca** — Tampilkan hanya buku yang dibaca orang tertentu
   - **Pencarian judul** — Live search, per-word matching
