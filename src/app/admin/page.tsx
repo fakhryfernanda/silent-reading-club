@@ -721,7 +721,7 @@ function MembersList({ members, editTarget, editValues, deleteTarget, saving, on
             gap: 14,
           }}>
             <div style={{
-              width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+              width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
               background: avatarColor(m.display_name),
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontFamily: 'Lora, serif', fontSize: 15, color: '#fff', fontWeight: 600,
@@ -927,7 +927,7 @@ function NotesList({ notes, editTarget, editValues, deleteTarget, saving, notePr
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{
-                  width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                  width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
                   background: avatarColor(n.member_name),
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontFamily: 'Lora, serif', fontSize: 12, color: '#fff', fontWeight: 600,

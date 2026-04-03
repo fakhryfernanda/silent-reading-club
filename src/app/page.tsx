@@ -118,15 +118,12 @@ function HomePageContent() {
   return (
     <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px' }}>
 
-      <header style={{ padding: '48px 0 36px', borderBottom: '1px solid var(--border)', marginBottom: 48 }}>
-        <div style={{ fontFamily: 'Lora, serif', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--amber)', marginBottom: 10 }}>
-          Silent Reading Club
-        </div>
-        <h1 style={{ fontFamily: 'Lora, serif', fontSize: 38, fontWeight: 600, color: 'var(--brown-dark)', lineHeight: 1.15, marginBottom: 8 }}>
-          Catatan Bersama
+      <header style={{ padding: '48px 0 32px', borderBottom: '1px solid var(--border)', marginBottom: 32 }}>
+        <h1 style={{ fontFamily: 'Lora, serif', fontSize: 52, fontWeight: 600, color: 'var(--brown-dark)', lineHeight: 1.1, marginBottom: 12 }}>
+          Silent Reading Space
         </h1>
-        <p style={{ fontSize: 16, color: 'var(--text-muted)', fontStyle: 'italic' }}>
-          Kumpulan notes dari orang-orang yang suka baca dan berbagi.
+        <p style={{ fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic', fontFamily: 'Lora, serif' }}>
+          Kumpulan catatan dari setiap sesi
         </p>
         <div style={{ display: 'flex', gap: 32, marginTop: 24 }}>
           {[
@@ -141,13 +138,6 @@ function HomePageContent() {
           ))}
         </div>
       </header>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <span style={{ fontFamily: 'Lora, serif', fontSize: 13, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-          Buku yang sedang dibaca
-        </span>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      </div>
 
       <BookFilters
         selectedType={selectedType}

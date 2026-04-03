@@ -87,7 +87,7 @@ export default function BookPage() {
         {/* Meta */}
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: 'Lora, serif', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--amber)', marginBottom: 8 }}>
-            Silent Reading Club
+            Silent Reading Space
           </div>
           <h1 style={{ fontFamily: 'Lora, serif', fontSize: 32, fontWeight: 600, color: 'var(--brown-dark)', lineHeight: 1.2, marginBottom: 6 }}>
             {book.title}
@@ -151,7 +151,7 @@ export default function BookPage() {
             }}
           >
             <div style={{
-              width: 24, height: 24, borderRadius: '50%',
+              width: 28, height: 28, borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 11, fontWeight: 600, color: '#fff',
               background: activeReader === r.id ? 'rgba(255,255,255,0.25)' : avatarColor(r.display_name),
@@ -186,7 +186,7 @@ export default function BookPage() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{
-                    width: 30, height: 30, borderRadius: '50%',
+                    width: 34, height: 34, borderRadius: '50%',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 12, fontWeight: 600, color: '#fff',
                     background: avatarColor(note.display_name),

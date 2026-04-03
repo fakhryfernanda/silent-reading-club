@@ -1,4 +1,4 @@
-# CLAUDE.md — Silent Reading Club
+# CLAUDE.md — Silent Reading Space
 
 Dokumen ini berisi konteks lengkap project untuk AI agent. Baca seluruhnya sebelum membantu.
 
@@ -6,7 +6,7 @@ Dokumen ini berisi konteks lengkap project untuk AI agent. Baca seluruhnya sebel
 
 ## Gambaran Project
 
-**Silent Reading Club** adalah website + bot WhatsApp untuk komunitas baca internal. Anggota grup WA bisa tag bot untuk menyimpan notes bacaan mereka, dan notes tersebut otomatis muncul di website.
+**Silent Reading Space** adalah website + bot WhatsApp untuk komunitas baca internal. Anggota grup WA bisa tag bot untuk menyimpan notes bacaan mereka, dan notes tersebut otomatis muncul di website.
 
 **Masalah yang diselesaikan:**
 - Chat dan diskusi di WA gampang tenggelam dan terlupakan
@@ -212,13 +212,14 @@ Semua endpoint admin memerlukan query param `?key=ADMIN_SECRET`. Tanpa key yang 
 ## Halaman Website
 
 ### Homepage (`/`)
+- Header: "Silent Reading Space" + subtitle "Kumpulan catatan dari setiap sesi"
 - Daftar semua buku dalam grid (pagination: 6 buku per halaman)
-- Tiap kartu: judul, penulis, avatar pembaca, jumlah notes, preview notes terbaru
+- Tiap kartu: judul, penulis, tag tipe, avatar pembaca, jumlah notes, preview notes terbaru
 - Stats ringkas di header: jumlah buku, pembaca, catatan
-- **Filter buku**: filter by tipe (Fiksi, Nonfiksi, dll), by pembaca, dan pencarian judul buku (live search)
+- **Filter buku**: baris atas = filter judul (kiri) + filter pembaca (kanan), baris bawah = filter tipe (chips)
 - Filter tersimpan di URL (`?type=Nonfiksi&reader=uuid&title=atomic`) — bisa di-share/bookmark
 - Tombol "Reset filter" untuk clear semua filter sekaligus
-- **Pagination**: client-side, default 6 buku per halaman, tombol "Sebelumnya" / "Selanjutnya"
+- **Pagination**: client-side, default 6 buku per halaman, tombol "Sebelumnya" / "Selanjutnya" + tombol nomor halaman (lingkaran)
 
 ### Detail Buku (`/books/:id`)
 - Info buku (judul, penulis, cover placeholder)
@@ -239,12 +240,43 @@ Semua endpoint admin memerlukan query param `?key=ADMIN_SECRET`. Tanpa key yang 
 
 ## Desain
 
-- **Vibe:** Cozy & warm — nuansa toko buku / kafe
+- **Vibe:** Clean, minimal, literary — nuansa toko buku / kafe
 - **Font:** Lora (heading), Crimson Pro (body)
 - **Warna utama:** cream (`#F5F0E8`), amber (`#D4824A`), brown (`#2C1A0E`)
 - **Bahasa:** Indonesia
 - **Quote footer:** *"We read to know we are not alone."* — C.S. Lewis
 - Tidak ada Tailwind — semua styling pakai inline styles + CSS variables di `globals.css`
+
+### UI Details (Update 2025-04-03)
+
+**Header Homepage:**
+- Label atas dihapus (tidak ada "Silent Reading Club" kecil di atas)
+- Judul utama: `Silent Reading Space` (paling menonjol, 52px, Lora 600)
+- Subtitle: `Kumpulan catatan dari setiap sesi` (italic, 18px, Lora)
+- Tagline "Buku yang sedang dibaca" + garis pengiring dihapus
+- Spacing header dikurangi: padding `48px 0 32px`, marginBottom `32px`
+
+**Book Card Layout:**
+- Urutan elemen: Judul → Penulis → Tag Tipe → Info lainnya
+- Tag tipe (Nonfiksi, Fiksi, dll) dipindah dari samping judul ke bawah penulis
+- Tag tetap pill/badge style: border amber, font 10px
+
+**Filter Layout:**
+- Baris atas: Filter Judul (kiri) + Filter Pembaca (kanan)
+- Baris bawah: Filter Tipe (chips)
+- Semua rata kiri
+
+**Avatar:**
+- Jika nama hanya emoji → tampilkan emoji pertama
+- Jika nama 2 kata atau lebih → ambil 2 huruf inisial pertama (contoh: "John Doe" → "JD")
+- Ukuran lingkaran disesuaikan: BookGrid 30px, BookFilters 30px, detail buku 28px/34px, admin 32px/42px
+- Tambah `lineHeight: 1` untuk proporsi 2 huruf inisial
+
+**Pagination:**
+- Tombol nomor halaman di bawah "Sebelumnya/Selanjutnya" (lingkaran, bisa diklik langsung)
+- Halaman aktif: solid amber, halaman lain: outline
+- CSS variable `var(--xxx)` di inline event handler diganti hex langsung (#D4824A, dll) karena JS tidak support `var()`
+- Setelah pindah halaman, pagination otomatis scroll ke tengah layar (`scrollIntoView`)
 
 ---
 
@@ -264,6 +296,21 @@ WAHA_API_KEY=                         # opsional, jika WAHA pakai API key
 ```
 
 > **Catatan:** Dapatkan `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` dari Supabase Dashboard → Settings → API.
+
+---
+
+## Riwayat Perubahan UI
+
+### 2025-04-03
+- Rebrand: "Silent Reading Club" → "Silent Reading Space"
+- Hapus label atas di header homepage
+- Judul: "Silent Reading Space", subtitle: "Kumpulan catatan dari setiap sesi"
+- Hapus tagline "Buku yang sedang dibaca" + garis
+- Pindah tag tipe dari samping judul ke bawah penulis
+- Filter layout: judul (kiri) + pembaca (kanan) di baris atas, tipe di baris bawah
+- Avatar: support emoji-only name, 2-inisial untuk nama 2+ kata, ukuran disesuaikan
+- Pagination: tambah tombol nomor halaman (lingkaran), auto-scroll setelah pindah halaman
+- Fix: `var(--xxx)` di inline event handler diganti hex (JS tidak support `var()`)
 
 ---
 
@@ -302,6 +349,7 @@ Di-pending. Workflow sudah selesai di `n8n-workflow.json` (pakai WAHA, bukan Met
 - `page.tsx` (homepage) adalah Server Component — jangan tambahkan event handlers di sini, gunakan komponen terpisah dengan `'use client'`
 - **`content` di tabel notes adalah markdown** — Claude memformat konten saat ekstraksi dari WA; dirender dengan `react-markdown` + class `.note-content`; preview di BookGrid distrip dengan `stripMarkdown()` dari `utils.ts`
 - **`react-markdown` perlu `transpilePackages`** — sudah dikonfigurasi di `next.config.js` karena library ini ESM-only
+- **Jangan pakai `var(--css-var)` di inline event handlers** — JavaScript tidak bisa parse `var()`. Gunakan hex value langsung (e.g., `#D4824A` bukan `var(--amber)`) di `onMouseEnter`/`onMouseLeave`/`onClick`
 
 ---
 

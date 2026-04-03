@@ -73,7 +73,8 @@ export default function BookFilters({
 
   return (
     <div style={{ marginBottom: 24 }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+      {/* Top row: Title search (left) + Reader filter (right) */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginBottom: 12 }}>
         {/* Title search */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
           <span style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
@@ -115,28 +116,6 @@ export default function BookFilters({
           )}
         </div>
 
-        {/* Type filter */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-            Tipe:
-          </span>
-          <button
-            onClick={() => onTypeChange(null)}
-            style={chipStyle(!selectedType)}
-          >
-            Semua
-          </button>
-          {types.map(type => (
-            <button
-              key={type}
-              onClick={() => onTypeChange(selectedType === type ? null : type)}
-              style={chipStyle(selectedType === type)}
-            >
-              {type}
-            </button>
-          ))}
-        </div>
-
         {/* Reader filter */}
         {members.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -157,16 +136,38 @@ export default function BookFilters({
             </select>
             {selectedReader && (
               <div style={{
-                width: 26, height: 26, borderRadius: '50%',
+                width: 30, height: 30, borderRadius: '50%',
                 background: avatarColor(members.find(m => m.id === selectedReader)?.display_name || ''),
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, fontWeight: 600, color: '#fff',
+                fontSize: 11, fontWeight: 600, color: '#fff', lineHeight: 1,
               }}>
                 {initials(members.find(m => m.id === selectedReader)?.display_name || '?')}
               </div>
             )}
           </div>
         )}
+      </div>
+
+      {/* Type filter row */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          Tipe:
+        </span>
+        <button
+          onClick={() => onTypeChange(null)}
+          style={chipStyle(!selectedType)}
+        >
+          Semua
+        </button>
+        {types.map(type => (
+          <button
+            key={type}
+            onClick={() => onTypeChange(selectedType === type ? null : type)}
+            style={chipStyle(selectedType === type)}
+          >
+            {type}
+          </button>
+        ))}
 
         {/* Reset button */}
         {hasActiveFilters && (

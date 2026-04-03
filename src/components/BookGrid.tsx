@@ -42,6 +42,13 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter }: { ty
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage)
+      // Scroll to pagination area so it stays visible
+      setTimeout(() => {
+        const paginationEl = document.querySelector('[data-pagination]')
+        if (paginationEl) {
+          paginationEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 100)
     }
   }
 
@@ -70,7 +77,7 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter }: { ty
               className="animate-fade-up book-card"
               style={{
                 background: 'var(--card-bg)',
-                border: '1px solid var(--border)',
+                border: '1px solid #D4824A',
                 borderRadius: 10,
                 padding: 22,
                 cursor: 'pointer',
@@ -83,39 +90,37 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter }: { ty
                 const el = e.currentTarget as HTMLDivElement
                 el.style.transform = 'translateY(-3px)'
                 el.style.boxShadow = '0 8px 28px rgba(44,26,14,0.1)'
-                el.style.borderColor = 'var(--brown-light)'
+                el.style.borderColor = '#2C1A0E'
               }}
               onMouseLeave={e => {
                 const el = e.currentTarget as HTMLDivElement
                 el.style.transform = ''
                 el.style.boxShadow = ''
-                el.style.borderColor = ''
+                el.style.borderColor = '#D4824A'
               }}
             >
               <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: 'linear-gradient(to bottom, var(--amber), var(--brown-light))', borderRadius: '10px 0 0 10px' }} />
 
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
-                <div style={{ fontFamily: 'Lora, serif', fontSize: 17, fontWeight: 600, color: 'var(--brown-dark)', lineHeight: 1.3 }}>
-                  {book.title}
-                </div>
-                {book.type && (
-                  <span style={{ fontFamily: 'Lora, serif', fontSize: 10, color: 'var(--amber)', border: '1px solid var(--amber)', borderRadius: 999, padding: '2px 7px', whiteSpace: 'nowrap', flexShrink: 0, marginTop: 2 }}>
-                    {book.type}
-                  </span>
-                )}
+              <div style={{ fontFamily: 'Lora, serif', fontSize: 17, fontWeight: 600, color: 'var(--brown-dark)', lineHeight: 1.3, marginBottom: 4 }}>
+                {book.title}
               </div>
-              <div style={{ fontSize: 14, color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: 16 }}>
+              <div style={{ fontSize: 14, color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: 6 }}>
                 {book.author || 'Penulis tidak diketahui'}
               </div>
+              {book.type && (
+                <span style={{ fontFamily: 'Lora, serif', fontSize: 10, color: 'var(--amber)', border: '1px solid var(--amber)', borderRadius: 999, padding: '2px 7px', whiteSpace: 'nowrap', display: 'inline-block', marginBottom: 16 }}>
+                  {book.type}
+                </span>
+              )}
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <div style={{ display: 'flex' }}>
                   {(book.readers || []).slice(0, 4).map((r, ri) => (
                     <div key={r.id} style={{
-                      width: 26, height: 26, borderRadius: '50%',
+                      width: 30, height: 30, borderRadius: '50%',
                       border: '2px solid var(--card-bg)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 11, fontWeight: 600, color: '#fff',
+                      fontSize: 11, fontWeight: 600, color: '#fff', lineHeight: 1,
                       background: avatarColor(r.display_name),
                       marginLeft: ri === 0 ? 0 : -6,
                     }}>
@@ -149,74 +154,109 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter }: { ty
 
       {/* Pagination UI */}
       {totalPages > 1 && (
-        <div style={{
+        <div data-pagination style={{
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          gap: 16,
+          gap: 12,
           marginBottom: 60,
           paddingTop: 24,
-          borderTop: '1px solid var(--border)'
+          borderTop: '1px solid rgba(107, 63, 31, 0.15)'
         }}>
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            style={{
-              fontFamily: 'Lora, serif',
-              fontSize: 14,
-              color: currentPage === 1 ? 'var(--text-muted)' : 'var(--brown-dark)',
-              background: 'none',
-              border: 'none',
-              cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-              padding: '8px 16px',
-              opacity: currentPage === 1 ? 0.5 : 1,
-              transition: 'opacity 0.2s',
-            }}
-            onMouseEnter={e => {
-              if (currentPage !== 1) {
-                (e.target as HTMLButtonElement).style.color = 'var(--amber)'
-              }
-            }}
-            onMouseLeave={e => {
-              (e.target as HTMLButtonElement).style.color = currentPage === 1 ? 'var(--text-muted)' : 'var(--brown-dark)'
-            }}
-          >
-            ← Sebelumnya
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              style={{
+                fontFamily: 'Lora, serif',
+                fontSize: 14,
+                color: currentPage === 1 ? '#7A5C3E' : '#2C1A0E',
+                background: 'none',
+                border: 'none',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                padding: '8px 16px',
+                opacity: currentPage === 1 ? 0.5 : 1,
+                transition: 'opacity 0.2s',
+              }}
+              onMouseEnter={e => {
+                if (currentPage !== 1) {
+                  (e.target as HTMLButtonElement).style.color = '#D4824A'
+                }
+              }}
+              onMouseLeave={e => {
+                (e.target as HTMLButtonElement).style.color = currentPage === 1 ? '#7A5C3E' : '#2C1A0E'
+              }}
+            >
+              ← Sebelumnya
+            </button>
 
-          <span style={{
-            fontFamily: 'Lora, serif',
-            fontSize: 14,
-            color: 'var(--text-muted)',
-          }}>
-            Halaman <span style={{ color: 'var(--amber)', fontWeight: 600 }}>{currentPage}</span> dari {totalPages}
-          </span>
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              style={{
+                fontFamily: 'Lora, serif',
+                fontSize: 14,
+                color: currentPage === totalPages ? '#7A5C3E' : '#2C1A0E',
+                background: 'none',
+                border: 'none',
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                padding: '8px 16px',
+                opacity: currentPage === totalPages ? 0.5 : 1,
+                transition: 'opacity 0.2s',
+              }}
+              onMouseEnter={e => {
+                if (currentPage !== totalPages) {
+                  (e.target as HTMLButtonElement).style.color = '#D4824A'
+                }
+              }}
+              onMouseLeave={e => {
+                (e.target as HTMLButtonElement).style.color = currentPage === totalPages ? '#7A5C3E' : '#2C1A0E'
+              }}
+            >
+              Selanjutnya →
+            </button>
+          </div>
 
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            style={{
-              fontFamily: 'Lora, serif',
-              fontSize: 14,
-              color: currentPage === totalPages ? 'var(--text-muted)' : 'var(--brown-dark)',
-              background: 'none',
-              border: 'none',
-              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-              padding: '8px 16px',
-              opacity: currentPage === totalPages ? 0.5 : 1,
-              transition: 'opacity 0.2s',
-            }}
-            onMouseEnter={e => {
-              if (currentPage !== totalPages) {
-                (e.target as HTMLButtonElement).style.color = 'var(--amber)'
-              }
-            }}
-            onMouseLeave={e => {
-              (e.target as HTMLButtonElement).style.color = currentPage === totalPages ? 'var(--text-muted)' : 'var(--brown-dark)'
-            }}
-          >
-            Selanjutnya →
-          </button>
+          {/* Page number buttons */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                style={{
+                  fontFamily: 'Lora, serif',
+                  fontSize: 13,
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  border: page === currentPage ? 'none' : '1px solid rgba(107, 63, 31, 0.15)',
+                  background: page === currentPage ? '#D4824A' : '#FAF6EE',
+                  color: page === currentPage ? '#fff' : '#7A5C3E',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => {
+                  if (page !== currentPage) {
+                    const el = e.target as HTMLButtonElement
+                    el.style.color = '#D4824A'
+                    el.style.borderColor = '#D4824A'
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (page !== currentPage) {
+                    const el = e.target as HTMLButtonElement
+                    el.style.color = '#7A5C3E'
+                    el.style.borderColor = 'rgba(107, 63, 31, 0.15)'
+                  }
+                }}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

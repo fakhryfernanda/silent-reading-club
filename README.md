@@ -1,4 +1,4 @@
-# Silent Reading Club
+# Silent Reading Space
 
 Website + bot WhatsApp untuk komunitas baca. Tag bot di WhatsApp, notes bacaan kamu langsung tersimpan dan tampil di website.
 
@@ -59,11 +59,13 @@ Website buka di [http://localhost:3000](http://localhost:3000)
 ### Website
 
 - **Homepage** — Lihat semua buku dan notes terbaru (pagination: 6 buku per halaman)
+  - Header: "Silent Reading Space" + subtitle "Kumpulan catatan dari setiap sesi"
   - **Filter by tipe** — Fiksi, Nonfiksi, Komik, Artikel, Jurnal, Kitab Suci
   - **Filter by pembaca** — Tampilkan hanya buku yang dibaca orang tertentu
   - **Pencarian judul** — Live search, per-word matching
+  - **Layout filter**: baris atas = judul (kiri) + pembaca (kanan), baris bawah = tipe chips
   - Filter tersimpan di URL — bisa di-share/bookmark
-  - **Pagination** — Client-side, tombol "Sebelumnya" / "Selanjutnya"
+  - **Pagination** — Client-side, tombol "Sebelumnya" / "Selanjutnya" + tombol nomor halaman (lingkaran)
 - **Detail Buku** — Klik buku untuk lihat semua catatan
   - **Filter pembaca** — Lihat catatan dari pembaca tertentu
 - **Admin Panel** — Buka `/admin?key=YOUR_SECRET` untuk CRUD data

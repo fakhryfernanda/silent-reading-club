@@ -23,7 +23,27 @@ export function avatarColor(name: string): string {
 }
 
 export function initials(name: string): string {
-  return name.charAt(0).toUpperCase()
+  // Get the first grapheme (handles emojis, surrogate pairs, etc.)
+  const graphemes = [...name]
+  const first = graphemes[0] || ''
+
+  // Check if the name is emoji-only
+  // If all characters are non-alphanumeric, treat as emoji-only
+  const isEmojiOnly = !graphemes.some(g => /[a-zA-Z0-9]/.test(g))
+
+  if (isEmojiOnly) {
+    return first
+  }
+
+  // Check if name has two or more words
+  const words = name.trim().split(/\s+/).filter(w => w.length > 0)
+  if (words.length >= 2) {
+    const firstLetter = [...words[0]][0]?.toUpperCase() || ''
+    const secondLetter = [...words[1]][0]?.toUpperCase() || ''
+    return firstLetter + secondLetter
+  }
+
+  return first.toUpperCase()
 }
 
 export function stripMarkdown(text: string): string {
