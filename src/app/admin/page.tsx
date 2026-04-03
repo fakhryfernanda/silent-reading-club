@@ -72,7 +72,7 @@ export default function AdminPage() {
   const [data, setData] = useState<AdminData | null>(null)
   const [loading, setLoading] = useState(true)
   const [unauthorized, setUnauthorized] = useState(false)
-  const [tab, setTab] = useState<Tab>('members')
+  const [tab, setTab] = useState<Tab>('books')
   const [editTarget, setEditTarget] = useState<EditTarget>(null)
   const [editValues, setEditValues] = useState<Record<string, string>>({})
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null)
@@ -346,8 +346,8 @@ export default function AdminPage() {
         </h1>
         <div style={{ display: 'flex', gap: 20, marginTop: 12 }}>
           {[
-            { label: 'Anggota', count: data.members.length },
             { label: 'Buku', count: data.books.length },
+            { label: 'Pembaca', count: data.members.length },
             { label: 'Catatan', count: data.notes.length },
           ].map(s => (
             <span key={s.label} style={{ fontFamily: 'Crimson Pro, serif', fontSize: 15, color: 'var(--text-muted)' }}>
@@ -376,7 +376,7 @@ export default function AdminPage() {
       {/* Tab bar + Add button */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div style={{ display: 'flex', gap: 8 }}>
-          {(['members', 'books', 'notes'] as Tab[]).map(t => (
+          {(['books', 'members', 'notes'] as Tab[]).map(t => (
             <button
               key={t}
               onClick={() => { setTab(t); cancelEdit(); cancelDelete(); cancelAdd() }}

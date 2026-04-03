@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
@@ -76,8 +79,8 @@ export async function GET(
         cover_url: book.cover_url,
         type: book.type,
         created_at: book.created_at,
-        note_count: noteCount.toString(),
-        reader_count: readerCount.toString()
+        note_count: noteCount,
+        reader_count: readerCount
       },
       notes: transformedNotes
     })

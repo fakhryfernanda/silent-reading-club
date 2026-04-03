@@ -1,5 +1,6 @@
 export function timeAgo(dateStr: string): string {
-  const date = new Date(dateStr)
+  // Append 'Z' to ensure date is parsed as UTC (Supabase stores in UTC)
+  const date = new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z')
   const now = new Date()
   const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
 

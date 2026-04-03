@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function GET() {
   try {
     // Get all books with their notes and readers
@@ -17,7 +20,7 @@ export async function GET() {
           id,
           content,
           created_at,
-          member:members (
+          members:member_id (
             id,
             display_name
           )
@@ -31,10 +34,10 @@ export async function GET() {
     const transformedBooks = books?.map(book => {
       const notes = book.notes as any[]
       const noteCount = notes?.length || 0
-      
+
       // Get unique readers
       const readers = notes?.reduce((acc: any[], note: any) => {
-        const member = note.member
+        const member = note.members
         if (member && !acc.find(r => r.id === member.id)) {
           acc.push({
             id: member.id,
@@ -45,7 +48,7 @@ export async function GET() {
       }, []) || []
 
       // Get latest note
-      const sortedNotes = notes?.sort((a: any, b: any) => 
+      const sortedNotes = notes?.sort((a: any, b: any) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       ) || []
       const latestNote = sortedNotes[0]
@@ -57,10 +60,10 @@ export async function GET() {
         cover_url: book.cover_url,
         type: book.type,
         created_at: book.created_at,
-        note_count: noteCount.toString(),
-        reader_count: readers.length.toString(),
+        note_count: noteCount,
+        reader_count: readers.length,
         latest_note: latestNote?.content || null,
-        latest_note_by: latestNote?.member?.display_name || null,
+        latest_note_by: latestNote?.members?.display_name || null,
         latest_note_at: latestNote?.created_at || null,
         readers: readers
       }
