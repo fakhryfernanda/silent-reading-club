@@ -11,12 +11,24 @@ type BookDetail = {
   notes: (Note & { display_name: string; wa_phone: string })[]
 }
 
+const COLLAPSE_CHAR_LIMIT = 300
+
 export default function BookPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const [data, setData] = useState<BookDetail | null>(null)
   const [activeReader, setActiveReader] = useState<string>('semua')
   const [loading, setLoading] = useState(true)
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set())
+
+  const toggleNote = (noteId: string) => {
+    setExpandedNotes(prev => {
+      const next = new Set(prev)
+      if (next.has(noteId)) next.delete(noteId)
+      else next.add(noteId)
+      return next
+    })
+  }
 
   useEffect(() => {
     fetch(`/api/books/${id}`)
@@ -209,7 +221,46 @@ export default function BookPage() {
                 </div>
               </div>
               <div className="note-content" style={{ paddingLeft: 40 }}>
-                <ReactMarkdown>{note.content}</ReactMarkdown>
+                {(() => {
+                  const isExpanded = expandedNotes.has(note.id)
+                  const shouldTruncate = note.content.length > COLLAPSE_CHAR_LIMIT
+                  const displayContent = shouldTruncate && !isExpanded
+                    ? note.content.slice(0, COLLAPSE_CHAR_LIMIT) + '...'
+                    : note.content
+
+                  return (
+                    <>
+                      <ReactMarkdown>{displayContent}</ReactMarkdown>
+                      {shouldTruncate && (
+                        <button
+                          onClick={() => toggleNote(note.id)}
+                          style={{
+                            marginTop: 12,
+                            padding: '6px 14px',
+                            fontSize: 13,
+                            fontFamily: 'Lora, serif',
+                            color: 'var(--amber)',
+                            background: 'none',
+                            border: '1px solid var(--amber)',
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                            transition: 'all 0.15s',
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = 'var(--amber)'
+                            e.currentTarget.style.color = '#fff'
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = 'none'
+                            e.currentTarget.style.color = 'var(--amber)'
+                          }}
+                        >
+                          {isExpanded ? 'Tutup ▲' : 'Baca selengkapnya ▼'}
+                        </button>
+                      )}
+                    </>
+                  )
+                })()}
               </div>
             </div>
           ))

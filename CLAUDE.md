@@ -225,6 +225,11 @@ Semua endpoint admin memerlukan query param `?key=ADMIN_SECRET`. Tanpa key yang 
 - Info buku (judul, penulis, cover placeholder)
 - Filter notes per pembaca (tabs)
 - Semua notes tampil urut terbaru
+- **Collapse/Expand Notes**: 
+  - Notes yang lebih dari 300 karakter otomatis ter-truncate dengan "..."
+  - Tombol "Baca selengkapnya ▼" untuk expand, "Tutup ▲" untuk collapse
+  - Setiap note punya state expand/collapse sendiri (independent)
+  - Default state: collapsed
 - Konten catatan dirender sebagai **markdown** via `react-markdown` + class `.note-content`
 
 ### Halaman Admin (`/admin?key=SECRET`)
@@ -311,6 +316,7 @@ WAHA_API_KEY=                         # opsional, jika WAHA pakai API key
 - Avatar: support emoji-only name, 2-inisial untuk nama 2+ kata, ukuran disesuaikan
 - Pagination: tambah tombol nomor halaman (lingkaran), auto-scroll setelah pindah halaman
 - Fix: `var(--xxx)` di inline event handler diganti hex (JS tidak support `var()`)
+- **Collapse/Expand Notes**: Notes >300 karakter auto-truncate, tombol "Baca selengkapnya"/"Tutup", default collapsed
 
 ---
 
