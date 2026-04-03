@@ -15,9 +15,9 @@ export type Book = {
   note_count?: number
   reader_count?: number
   readers?: Member[]
-  latest_note?: string
-  latest_note_by?: string
-  latest_note_at?: string
+  latest_note?: string | null
+  latest_note_by?: string | null
+  latest_note_at?: string | null
 }
 
 export type Note = {

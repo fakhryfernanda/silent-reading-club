@@ -1,96 +1,52 @@
-import { Book } from '@/lib/types'
 import BookGrid from '@/components/BookGrid'
 import { supabase } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-async function getBooks(): Promise<Book[]> {
+async function getStats() {
   try {
-    // Get all books with their notes and readers
-    const { data: books, error: booksError } = await supabase
+    const { data: books, error } = await supabase
       .from('books')
       .select(`
         id,
-        title,
-        author,
-        cover_url,
-        type,
-        created_at,
         notes (
           id,
-          content,
-          created_at,
           members:member_id (
-            id,
-            display_name
+            id
           )
         )
       `)
-      .order('created_at', { ascending: false })
 
-    if (booksError) throw booksError
+    if (error) throw error
 
-    // Transform data to match the expected format
-    const transformedBooks = books?.map(book => {
-      const notes = book.notes as any[]
-      const noteCount = notes?.length || 0
-
-      // Get unique readers
-      const readers = notes?.reduce((acc: any[], note: any) => {
-        const member = note.members
-        if (member && !acc.find(r => r.id === member.id)) {
-          acc.push({
-            id: member.id,
-            display_name: member.display_name
-          })
-        }
-        return acc
-      }, []) || []
-
-      // Get latest note
-      const sortedNotes = notes?.sort((a: any, b: any) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    const totalBooks = books?.length || 0
+    const totalNotes = books?.reduce((sum, book) => sum + (book.notes?.length || 0), 0) || 0
+    const allReaders = new Set(
+      books?.flatMap(book => 
+        (book.notes || [])
+          .map((note: any) => note.members?.id)
+          .filter(Boolean)
       ) || []
-      const latestNote = sortedNotes[0]
+    )
 
-      return {
-        id: book.id,
-        title: book.title,
-        author: book.author,
-        cover_url: book.cover_url,
-        type: book.type,
-        created_at: book.created_at,
-        note_count: noteCount,
-        reader_count: readers.length,
-        latest_note: latestNote?.content || null,
-        latest_note_by: latestNote?.members?.display_name || null,
-        latest_note_at: latestNote?.created_at || null,
-        readers: readers
-      }
-    })
-
-    // Sort by latest note date
-    const sorted = transformedBooks?.sort((a, b) => {
-      if (!a.latest_note_at) return 1
-      if (!b.latest_note_at) return -1
-      return new Date(b.latest_note_at).getTime() - new Date(a.latest_note_at).getTime()
-    })
-
-    return sorted || []
+    return {
+      totalBooks,
+      totalNotes,
+      totalReaders: allReaders.size
+    }
   } catch (err) {
-    console.error('Error fetching books:', err)
-    return []
+    console.error('Error fetching stats:', err)
+    return {
+      totalBooks: 0,
+      totalNotes: 0,
+      totalReaders: 0
+    }
   }
 }
 
 export default async function HomePage() {
-  const books = await getBooks()
-
-  const totalNotes = books.reduce((sum, b) => sum + Number(b.note_count || 0), 0)
-  const totalReaders = new Set(
-    books.flatMap(b => (b.readers || []).map(r => r.id))
-  ).size
+  const stats = await getStats()
 
   return (
     <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px' }}>
@@ -107,9 +63,9 @@ export default async function HomePage() {
         </p>
         <div style={{ display: 'flex', gap: 32, marginTop: 24 }}>
           {[
-            { num: books.length, label: 'Buku' },
-            { num: totalReaders, label: 'Pembaca' },
-            { num: totalNotes, label: 'Catatan' },
+            { num: stats.totalBooks, label: 'Buku' },
+            { num: stats.totalReaders, label: 'Pembaca' },
+            { num: stats.totalNotes, label: 'Catatan' },
           ].map(s => (
             <div key={s.label} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <span style={{ fontFamily: 'Lora, serif', fontSize: 22, fontWeight: 600, color: 'var(--amber)' }}>{s.num}</span>
@@ -126,7 +82,7 @@ export default async function HomePage() {
         <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
 
-      <BookGrid books={books} />
+      <BookGrid />
 
       <footer style={{ borderTop: '1px solid var(--border)', padding: '28px 0', textAlign: 'center' }}>
         <div style={{ fontFamily: 'Lora, serif', fontStyle: 'italic', fontSize: 16, color: 'var(--brown-mid)' }}>

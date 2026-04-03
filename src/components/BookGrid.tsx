@@ -1,10 +1,35 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Book } from '@/lib/types'
 import { timeAgo, avatarColor, initials, stripMarkdown } from '@/lib/utils'
 
-export default function BookGrid({ books }: { books: Book[] }) {
+export default function BookGrid() {
+  const [books, setBooks] = useState<Book[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/books')
+      .then(res => res.json())
+      .then(data => {
+        setBooks(data)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Error fetching books:', err)
+        setLoading(false)
+      })
+  }, [])
+
+  if (loading) {
+    return (
+      <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', padding: '40px 0', marginBottom: 60 }}>
+        Memuat...
+      </p>
+    )
+  }
+
   if (books.length === 0) {
     return (
       <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', padding: '40px 0', marginBottom: 60 }}>
@@ -70,7 +95,7 @@ export default function BookGrid({ books }: { books: Book[] }) {
                     background: avatarColor(r.display_name),
                     marginLeft: ri === 0 ? 0 : -6,
                   }}>
-                    {initials(r.display_name)}
+                    {r.display_name ? initials(r.display_name) : '?'}
                   </div>
                 ))}
               </div>
@@ -89,7 +114,7 @@ export default function BookGrid({ books }: { books: Book[] }) {
                   "{stripMarkdown(book.latest_note)}"
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--amber)', marginTop: 6 }}>
-                  — {book.latest_note_by}, {book.latest_note_at ? timeAgo(book.latest_note_at) : ''}
+                  &mdash; {book.latest_note_by || 'Anonim'}{book.latest_note_at ? `, ${timeAgo(book.latest_note_at)}` : ''}
                 </div>
               </div>
             )}
