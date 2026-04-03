@@ -278,3 +278,51 @@ Di-pending. Workflow sudah selesai di `n8n-workflow.json` (pakai WAHA, bukan Met
 - `page.tsx` (homepage) adalah Server Component — jangan tambahkan event handlers di sini, gunakan komponen terpisah dengan `'use client'`
 - **`content` di tabel notes adalah markdown** — Claude memformat konten saat ekstraksi dari WA; dirender dengan `react-markdown` + class `.note-content`; preview di BookGrid distrip dengan `stripMarkdown()` dari `utils.ts`
 - **`react-markdown` perlu `transpilePackages`** — sudah dikonfigurasi di `next.config.js` karena library ini ESM-only
+
+---
+
+## Supabase Query Syntax (PENTING!)
+
+### Foreign Key Relationships
+
+Saat query dengan foreign key, **harus pakai nama kolom foreign key**, bukan nama tabel:
+
+```typescript
+// ✅ BENAR - pakai nama kolom foreign key
+members:member_id (display_name, wa_phone)
+books:book_id (title, author)
+notes:notes(member_id)  // dari members table
+
+// ❌ SALAH - ini TIDAK akan bekerja
+member:members (display_name)
+book:books (title)
+notes (id)
+```
+
+**Format:** `alias:foreign_key_column (fields)`
+
+### Data Mapping
+
+Setelah query, akses nested data sesuai alias yang dipakai:
+
+```typescript
+// Jika query pakai: members:member_id (display_name)
+const memberName = note.members?.display_name  // ✅
+```
+
+### Disable Cache untuk API Routes
+
+Semua API route dan Server Component yang butuh data fresh harus punya:
+
+```typescript
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+```
+
+### UTC Timestamp Parsing
+
+Timestamp dari Supabase **tidak ada `Z` di akhir**. Tambahkan `Z` supaya di-parse sebagai UTC:
+
+```typescript
+const date = new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z')
+```
