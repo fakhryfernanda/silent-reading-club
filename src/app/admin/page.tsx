@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { timeAgo, avatarColor, initials } from '@/lib/utils'
 import BookFilters from '@/components/BookFilters'
+import SearchableBookSelect from '@/components/SearchableBookSelect'
 import type { Attachment } from '@/lib/types'
 
 type AdminMember = {
@@ -619,16 +620,15 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Buku</label>
-                  <select
+                  <SearchableBookSelect
+                    books={data.books.map(b => ({ id: b.id, title: b.title }))}
                     value={addValues.book_id ?? ''}
-                    onChange={e => setAddValues(p => ({ ...p, book_id: e.target.value }))}
-                    style={{ ...inputStyle, width: 'auto', minWidth: 200 }}
-                  >
-                    <option value="">Pilih buku...</option>
-                    {data.books.map(b => (
-                      <option key={b.id} value={b.id}>{b.title}</option>
-                    ))}
-                  </select>
+                    onChange={v => setAddValues(p => ({ ...p, book_id: v }))}
+                    selectedMemberId={addValues.member_id}
+                    allNotes={data.notes}
+                    placeholder="Cari buku..."
+                    emptyLabel="Tidak ada buku ditemukan"
+                  />
                 </div>
                 <div>
                   <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Catatan</label>
@@ -1378,22 +1378,19 @@ function NotesFilter({ members, books, selectedMember, selectedBook, selectedBoo
           </select>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 200 }}>
           <span style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             Buku:
           </span>
-          <select
-            value={selectedBook || ''}
-            onChange={e => onBookChange(e.target.value || null)}
-            style={selectStyle}
-          >
-            <option value="">Semua buku</option>
-            {books.map(b => (
-              <option key={b.id} value={b.id}>
-                {b.title}
-              </option>
-            ))}
-          </select>
+          <div style={{ flex: 1, maxWidth: 280 }}>
+            <SearchableBookSelect
+              books={books.map(b => ({ id: b.id, title: b.title }))}
+              value={selectedBook || ''}
+              onChange={v => onBookChange(v || null)}
+              placeholder="Semua buku"
+              emptyLabel="Tidak ada buku ditemukan"
+            />
+          </div>
         </div>
 
         {hasActiveFilters && (

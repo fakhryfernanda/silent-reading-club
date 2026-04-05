@@ -13,6 +13,7 @@ Website + bot WhatsApp untuk komunitas baca. Tag bot di WhatsApp, notes bacaan k
 - 🎨 **Markdown support** — Format notes dengan markdown (bold, italic, list, dll)
 - 🖼️ **Attachment foto** — Upload foto ke catatan via admin panel, tampil di halaman detail buku
 - 📕 **Cover buku** — Upload cover buku via admin panel, tampil di homepage dan halaman detail
+- 📚 **Searchable book dropdown** — Pilih buku di admin dengan search, filter "Lanjut baca" / "Buku baru"
 
 ## Setup
 
@@ -126,6 +127,7 @@ Fitur:
 - 📊 Lihat semua data sekaligus
 - 🖼️ **Upload foto** per catatan (multiple, langsung ke Cloudflare R2)
 - 📕 **Upload cover buku** — upload saat tambah/edit buku, cover lama otomatis dihapus dari R2
+- 📚 **Searchable book dropdown** — Pilih buku saat tambah catatan dengan search, filter "Lanjut baca" (buku yang sudah dibaca user) atau "Buku baru"
 - 🔍 **Filter**:
   - Tab Buku: by tipe, pembaca, dan pencarian judul (live search)
   - Tab Catatan: by pembaca, buku, dan pencarian judul buku (live search, dropdown alfabetis)
