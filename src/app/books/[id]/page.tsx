@@ -275,6 +275,36 @@ export default function BookPage() {
                   )
                 })()}
               </div>
+
+              {/* Attachments */}
+              {note.attachments && note.attachments.length > 0 && (
+                <div style={{
+                  paddingLeft: 40,
+                  marginTop: 16,
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                  gap: 8,
+                  maxWidth: 420,
+                }}>
+                  {note.attachments.map(att => (
+                    <a
+                      key={att.id}
+                      href={att.signed_url ?? '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: 'block', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)', transition: 'opacity 0.15s' }}
+                      onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
+                      onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                    >
+                      <img
+                        src={att.signed_url ?? ''}
+                        alt={att.file_name ?? 'attachment'}
+                        style={{ width: '100%', height: 'auto', display: 'block' }}
+                      />
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           ))
         )}

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/db'
+import { refreshAttachmentsForNotes } from '@/lib/refreshAttachments'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -49,6 +50,15 @@ export async function GET(
     const uniqueReaders = new Set(notes?.map((n: any) => n.member_id))
     const readerCount = uniqueReaders.size
 
+    // Fetch and refresh attachments for all notes
+    const noteIds = notes?.map((n: any) => n.id) || []
+    const attachments = await refreshAttachmentsForNotes(noteIds)
+    const attachmentsByNoteId = attachments.reduce((acc: Record<string, any[]>, att) => {
+      if (!acc[att.note_id]) acc[att.note_id] = []
+      acc[att.note_id].push(att)
+      return acc
+    }, {})
+
     // Transform notes
     const transformedNotes = notes
       ?.map((note: any) => ({
@@ -59,7 +69,8 @@ export async function GET(
         created_at: note.created_at,
         member_id: note.member_id,
         display_name: note.member?.display_name,
-        wa_phone: note.member?.wa_phone
+        wa_phone: note.member?.wa_phone,
+        attachments: attachmentsByNoteId[note.id] || []
       }))
       .sort((a: any, b: any) => {
         // Sort by sort_order first (nulls last), then by created_at

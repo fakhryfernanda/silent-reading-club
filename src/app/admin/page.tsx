@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { timeAgo, avatarColor, initials } from '@/lib/utils'
 import BookFilters from '@/components/BookFilters'
+import type { Attachment } from '@/lib/types'
 
 type AdminMember = {
   id: string
@@ -33,6 +34,7 @@ type AdminNote = {
   created_at: string
   member_name: string
   book_title: string
+  attachments?: Attachment[]
 }
 
 const BOOK_TYPES = ['Nonfiksi', 'Fiksi', 'Komik', 'Artikel', 'Jurnal', 'Kitab Suci']
@@ -83,7 +85,10 @@ export default function AdminPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [notePreview, setNotePreview] = useState(false)
-  
+  const [uploadingNoteId, setUploadingNoteId] = useState<string | null>(null)
+  const [deletingAttachmentId, setDeletingAttachmentId] = useState<string | null>(null)
+  const addFilesRef = useRef<FileList | null>(null)
+
   // Filter states
   const [bookTypeFilter, setBookTypeFilter] = useState<string | null>(null)
   const [bookReaderFilter, setBookReaderFilter] = useState<string | null>(null)
@@ -274,6 +279,7 @@ export default function AdminPage() {
   function cancelAdd() {
     setAddForm(null)
     setAddValues({})
+    addFilesRef.current = null
   }
 
   async function submitAdd() {
@@ -318,10 +324,25 @@ export default function AdminPage() {
       } else {
         const member = data.members.find(m => m.id === addValues.member_id)
         const book = data.books.find(b => b.id === addValues.book_id)
+
+        // Upload attachments if any files were selected
+        let attachments: Attachment[] = []
+        const files = addFilesRef.current
+        if (files && files.length > 0) {
+          const form = new FormData()
+          form.append('note_id', created.id)
+          for (const file of Array.from(files)) form.append('file', file)
+          const attRes = await fetch(apiUrl('/api/admin/attachments'), { method: 'POST', body: form })
+          if (attRes.ok) {
+            attachments = await attRes.json()
+          }
+        }
+
         const newNote: AdminNote = {
           ...created,
           member_name: member?.display_name ?? '',
           book_title: book?.title ?? '',
+          attachments,
         }
         setData(d => d ? {
           ...d,
@@ -333,6 +354,55 @@ export default function AdminPage() {
       cancelAdd()
     } finally {
       setSaving(false)
+    }
+  }
+
+  // ── ATTACHMENTS ───────────────────────────────────────
+  async function uploadAttachments(noteId: string, files: FileList) {
+    setUploadingNoteId(noteId)
+    try {
+      const form = new FormData()
+      form.append('note_id', noteId)
+      for (const file of Array.from(files)) {
+        form.append('file', file)
+      }
+      const res = await fetch(apiUrl('/api/admin/attachments'), { method: 'POST', body: form })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        showError(j.error ?? 'Gagal mengunggah foto.')
+        return
+      }
+      const newAttachments: Attachment[] = await res.json()
+      setData(d => d ? {
+        ...d,
+        notes: d.notes.map(n => n.id === noteId
+          ? { ...n, attachments: [...(n.attachments ?? []), ...newAttachments] }
+          : n
+        )
+      } : d)
+    } finally {
+      setUploadingNoteId(null)
+    }
+  }
+
+  async function deleteAttachment(noteId: string, attachmentId: string) {
+    setDeletingAttachmentId(attachmentId)
+    try {
+      const res = await fetch(apiUrl(`/api/admin/attachments/${attachmentId}`), { method: 'DELETE' })
+      if (!res.ok) {
+        const j = await res.json()
+        showError(j.error ?? 'Gagal menghapus foto.')
+        return
+      }
+      setData(d => d ? {
+        ...d,
+        notes: d.notes.map(n => n.id === noteId
+          ? { ...n, attachments: (n.attachments ?? []).filter(a => a.id !== attachmentId) }
+          : n
+        )
+      } : d)
+    } finally {
+      setDeletingAttachmentId(null)
     }
   }
 
@@ -531,6 +601,24 @@ export default function AdminPage() {
                     style={{ ...inputStyle, resize: 'vertical', fontFamily: 'Crimson Pro, serif', fontSize: 15 }}
                   />
                 </div>
+                <div>
+                  <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Foto (opsional)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={e => {
+                      addFilesRef.current = e.target.files
+                      setAddValues(p => ({ ...p, _fileCount: String(e.target.files?.length ?? 0) }))
+                    }}
+                    style={{ fontFamily: 'Crimson Pro, serif', fontSize: 14, color: 'var(--brown-dark)' }}
+                  />
+                  {addValues._fileCount && Number(addValues._fileCount) > 0 && (
+                    <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 13, color: 'var(--text-muted)', marginLeft: 8 }}>
+                      {addValues._fileCount} foto dipilih
+                    </span>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -610,6 +698,8 @@ export default function AdminPage() {
             saving={saving}
             notePreview={notePreview}
             hasActiveFilters={!!noteMemberFilter || !!noteBookFilter || !!noteBookTitleFilter}
+            uploadingNoteId={uploadingNoteId}
+            deletingAttachmentId={deletingAttachmentId}
             onTogglePreview={() => setNotePreview(p => !p)}
             onEdit={(id, vals) => { startEdit('notes', id, vals); setNotePreview(false) }}
             onEditChange={setEditValues}
@@ -618,6 +708,8 @@ export default function AdminPage() {
             onDelete={(id, label) => startDelete('notes', id, label)}
             onConfirmDelete={confirmDelete}
             onCancelDelete={cancelDelete}
+            onUploadAttachments={uploadAttachments}
+            onDeleteAttachment={deleteAttachment}
           />
         </>
       )}
@@ -891,7 +983,7 @@ function BooksList({ books, editTarget, editValues, deleteTarget, saving, onEdit
 }
 
 // ── NOTES LIST ──────────────────────────────────────────
-function NotesList({ notes, editTarget, editValues, deleteTarget, saving, notePreview, onTogglePreview, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete, hasActiveFilters }: {
+function NotesList({ notes, editTarget, editValues, deleteTarget, saving, notePreview, onTogglePreview, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete, hasActiveFilters, uploadingNoteId, deletingAttachmentId, onUploadAttachments, onDeleteAttachment }: {
   notes: AdminNote[]
   editTarget: EditTarget
   editValues: Record<string, string>
@@ -907,7 +999,13 @@ function NotesList({ notes, editTarget, editValues, deleteTarget, saving, notePr
   onConfirmDelete: () => void
   onCancelDelete: () => void
   hasActiveFilters?: boolean
+  uploadingNoteId: string | null
+  deletingAttachmentId: string | null
+  onUploadAttachments: (noteId: string, files: FileList) => void
+  onDeleteAttachment: (noteId: string, attachmentId: string) => void
 }) {
+  const [confirmDeleteAttachmentId, setConfirmDeleteAttachmentId] = useState<string | null>(null)
+
   if (notes.length === 0) {
     return <EmptyState text={hasActiveFilters ? "Tidak ada catatan yang sesuai dengan filter." : "Belum ada catatan."} />
   }
@@ -1016,6 +1114,100 @@ function NotesList({ notes, editTarget, editValues, deleteTarget, saving, notePr
                 {n.content}
               </p>
             )}
+
+            {/* Attachments section */}
+            <div style={{ marginTop: 12 }}>
+              {/* Existing thumbnails */}
+              {n.attachments && n.attachments.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                  {n.attachments.map(att => (
+                    <div key={att.id} style={{ position: 'relative', width: 80 }}>
+                      <a
+                        href={att.signed_url ?? '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: 'block', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)' }}
+                      >
+                        <img
+                          src={att.signed_url ?? ''}
+                          alt={att.file_name ?? 'attachment'}
+                          style={{ width: '100%', height: 'auto', display: 'block' }}
+                        />
+                      </a>
+                      {confirmDeleteAttachmentId === att.id ? (
+                        <div style={{
+                          position: 'absolute', top: -8, right: -8,
+                          background: 'var(--card-bg)', border: '1px solid var(--border)',
+                          borderRadius: 8, padding: '4px 6px',
+                          display: 'flex', gap: 4, alignItems: 'center',
+                          boxShadow: '0 2px 8px rgba(44,26,14,0.15)',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          <button
+                            onClick={() => { setConfirmDeleteAttachmentId(null); onDeleteAttachment(n.id, att.id) }}
+                            disabled={deletingAttachmentId === att.id}
+                            style={{ ...btnBase, fontSize: 11, padding: '2px 8px', background: '#c0392b', color: '#fff' }}
+                          >
+                            Hapus
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteAttachmentId(null)}
+                            style={{ ...btnBase, fontSize: 11, padding: '2px 8px', background: 'var(--card-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDeleteAttachmentId(att.id)}
+                          disabled={deletingAttachmentId === att.id}
+                          style={{
+                            position: 'absolute', top: -6, right: -6,
+                            width: 20, height: 20, borderRadius: '50%',
+                            background: '#c0392b', color: '#fff',
+                            border: 'none', cursor: 'pointer',
+                            fontSize: 11, lineHeight: '1', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            opacity: deletingAttachmentId === att.id ? 0.5 : 1,
+                          }}
+                          title="Hapus foto"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Upload input */}
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  style={{ display: 'none' }}
+                  disabled={uploadingNoteId === n.id}
+                  onChange={e => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      onUploadAttachments(n.id, e.target.files)
+                      e.target.value = ''
+                    }
+                  }}
+                />
+                <span style={{
+                  fontFamily: 'Lora, serif',
+                  fontSize: 12,
+                  color: uploadingNoteId === n.id ? 'var(--text-muted)' : '#D4824A',
+                  border: '1px solid #D4824A',
+                  borderRadius: 6,
+                  padding: '3px 10px',
+                  opacity: uploadingNoteId === n.id ? 0.6 : 1,
+                  transition: 'all 0.15s',
+                }}>
+                  {uploadingNoteId === n.id ? 'Mengunggah...' : '+ Foto'}
+                </span>
+              </label>
+            </div>
           </div>
         )
       })}
