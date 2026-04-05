@@ -14,6 +14,7 @@ Website + bot WhatsApp untuk komunitas baca. Tag bot di WhatsApp, notes bacaan k
 - 🖼️ **Attachment foto** — Upload foto ke catatan via admin panel, tampil di halaman detail buku
 - 📕 **Cover buku** — Upload cover buku via admin panel, tampil di homepage dan halaman detail
 - 📚 **Searchable book dropdown** — Pilih buku di admin dengan search, filter "Lanjut baca" / "Buku baru"
+- 🔢 **Urutan catatan** — Sort order sequential (required), auto-reorder saat insert/edit/hapus catatan
 
 ## Setup
 
@@ -35,7 +36,7 @@ Buat project di [Supabase](https://supabase.com):
    - `001_initial_setup.sql`
    - `002_seed_data.sql` (optional, untuk dev)
    - `003_attachments.sql`
-   - `004_book_cover_expiry.sql`
+   - `004_notes_sort_order_not_null.sql`
 
 Lihat `migrations/README.md` untuk detail lengkap.
 
@@ -128,6 +129,7 @@ Fitur:
 - 🖼️ **Upload foto** per catatan (multiple, langsung ke Cloudflare R2)
 - 📕 **Upload cover buku** — upload saat tambah/edit buku, cover lama otomatis dihapus dari R2
 - 📚 **Searchable book dropdown** — Pilih buku saat tambah catatan dengan search, filter "Lanjut baca" (buku yang sudah dibaca user) atau "Buku baru"
+- 🔢 **Urutan catatan** — Sort order required (default: auto-increment). Edit urutan auto-reorder catatan lain dalam buku yang sama (naik/turun/hapus)
 - 🔍 **Filter**:
   - Tab Buku: by tipe, pembaca, dan pencarian judul (live search)
   - Tab Catatan: by pembaca, buku, dan pencarian judul buku (live search, dropdown alfabetis)

@@ -191,7 +191,7 @@ export default function AdminPage() {
     if (!editTarget || !data) return
     setSaving(true)
     try {
-      let body: Record<string, string | null> = {}
+      let body: Record<string, string | number | null> = {}
       let url = ''
       if (editTarget.type === 'members') {
         body = { display_name: editValues.display_name, wa_phone: editValues.wa_phone }
@@ -216,7 +216,17 @@ export default function AdminPage() {
         editCoverRef.current = null
         return
       } else {
-        body = { content: editValues.content, sort_order: editValues.sort_order || null }
+        // notes - sort_order is required, parse to integer
+        const sortOrderInt = editValues.sort_order !== undefined && editValues.sort_order !== ''
+          ? parseInt(editValues.sort_order)
+          : null
+        
+        if (!sortOrderInt) {
+          showError('Urutan catatan wajib diisi.')
+          return
+        }
+
+        body = { content: editValues.content, sort_order: sortOrderInt }
         url = `/api/admin/notes/${editTarget.id}`
       }
 
@@ -368,6 +378,7 @@ export default function AdminPage() {
           book_id: addValues.book_id,
           content: addValues.content?.trim(),
           raw_message: null,
+          sort_order: addValues.sort_order?.trim() || null,
         }
       }
 
@@ -665,7 +676,17 @@ export default function AdminPage() {
                   <SearchableBookSelect
                     books={data.books.map(b => ({ id: b.id, title: b.title }))}
                     value={addValues.book_id ?? ''}
-                    onChange={v => setAddValues(p => ({ ...p, book_id: v }))}
+                    onChange={v => {
+                      setAddValues(p => ({ ...p, book_id: v }))
+                      // Auto-calculate sort_order when book is selected
+                      if (v) {
+                        const bookNotes = data.notes.filter(n => n.book_id === v)
+                        const maxOrder = bookNotes.reduce((max, n) => Math.max(max, n.sort_order ?? 0), 0)
+                        setAddValues(p => ({ ...p, sort_order: String(maxOrder + 1) }))
+                      } else {
+                        setAddValues(p => ({ ...p, sort_order: '' }))
+                      }
+                    }}
                     selectedMemberId={addValues.member_id}
                     allNotes={data.notes}
                     placeholder="Cari buku..."
@@ -681,6 +702,20 @@ export default function AdminPage() {
                     rows={3}
                     style={{ ...inputStyle, resize: 'vertical', fontFamily: 'Crimson Pro, serif', fontSize: 15 }}
                   />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Urutan #</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={addValues.sort_order ?? ''}
+                    onChange={e => setAddValues(p => ({ ...p, sort_order: e.target.value }))}
+                    placeholder="Auto"
+                    style={{ ...inputStyle, width: 80, textAlign: 'center' }}
+                  />
+                  <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 12, color: 'var(--text-muted)' }}>
+                    (kosongkan untuk otomatis)
+                  </span>
                 </div>
                 <div>
                   <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Foto (opsional)</label>
