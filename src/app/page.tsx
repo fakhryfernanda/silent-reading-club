@@ -22,6 +22,7 @@ function HomePageContent() {
   
   const [stats, setStats] = useState<Stats | null>(null)
   const [members, setMembers] = useState<Member[]>([])
+  const [availableTypes, setAvailableTypes] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
   const selectedType = searchParams.get('type')
@@ -59,9 +60,18 @@ function HomePageContent() {
             }
           })
         })
-        setMembers(Array.from(memberMap.values()).sort((a, b) => 
+        setMembers(Array.from(memberMap.values()).sort((a, b) =>
           a.display_name.localeCompare(b.display_name)
         ))
+
+        // Extract unique book types
+        const types = [...new Set(
+          books
+            .map((book: any) => book.type)
+            .filter((type: string | null) => type != null && type !== '')
+        )] as string[]
+        setAvailableTypes(types)
+
         setLoading(false)
       })
       .catch(err => {
@@ -140,6 +150,7 @@ function HomePageContent() {
       </header>
 
       <BookFilters
+        types={availableTypes}
         selectedType={selectedType}
         selectedReader={selectedReader}
         selectedTitle={selectedTitle}

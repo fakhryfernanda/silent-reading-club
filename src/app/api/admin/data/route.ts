@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/db'
+import { refreshAttachmentsForNotes } from '@/lib/refreshAttachments'
+import { refreshBookCoverUrl } from '@/lib/refreshCoverUrl'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -45,6 +47,8 @@ export async function GET(req: NextRequest) {
       .from('books')
       .select(`
         *,
+        cover_r2_key,
+        cover_url_expires_at,
         notes (
           id,
           content,
@@ -87,7 +91,9 @@ export async function GET(req: NextRequest) {
         note_count: noteCount,
         latest_note_at: latestNote?.created_at || null,
         readers,
-        notes: undefined
+        notes: undefined,
+        cover_r2_key: (book as any).cover_r2_key,
+        cover_url_expires_at: (book as any).cover_url_expires_at,
       }
     })
 
@@ -111,6 +117,15 @@ export async function GET(req: NextRequest) {
         return words.every(word => title.includes(word))
       })
     }
+
+    // Refresh cover signed URLs if needed
+    const booksWithFreshCovers = await Promise.all(
+      (books ?? []).map(async b => {
+        const freshUrl = await refreshBookCoverUrl(b as any)
+        return { ...b, cover_url: freshUrl }
+      })
+    )
+    books = booksWithFreshCovers
 
     // Sort by latest_note_at DESC (same as /api/books)
     const sortedBooks = books?.sort((a, b) => {
@@ -150,10 +165,19 @@ export async function GET(req: NextRequest) {
       })
     }
 
+    const noteIds = (notesData || []).map((n: any) => n.id)
+    const attachments = await refreshAttachmentsForNotes(noteIds)
+    const attachmentsByNoteId = attachments.reduce((acc: Record<string, any[]>, att) => {
+      if (!acc[att.note_id]) acc[att.note_id] = []
+      acc[att.note_id].push(att)
+      return acc
+    }, {})
+
     const notes = notesData?.map((n: any) => ({
       ...n,
       member_name: n.members?.display_name,
       book_title: n.books?.title,
+      attachments: attachmentsByNoteId[n.id] || [],
       members: undefined,
       books: undefined
     }))

@@ -29,4 +29,16 @@ export type Note = {
   sort_order: number
   created_at: string
   member?: Member
+  attachments?: Attachment[]
+}
+
+export type Attachment = {
+  id: string
+  note_id: string
+  r2_key: string
+  file_name: string | null
+  mime_type: string | null
+  signed_url: string | null
+  url_expires_at: string | null
+  created_at: string
 }

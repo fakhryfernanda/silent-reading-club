@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { timeAgo, avatarColor, initials } from '@/lib/utils'
 import BookFilters from '@/components/BookFilters'
+import SearchableBookSelect from '@/components/SearchableBookSelect'
+import type { Attachment } from '@/lib/types'
 
 type AdminMember = {
   id: string
@@ -18,6 +20,7 @@ type AdminBook = {
   title: string
   author: string | null
   type: string | null
+  cover_url: string | null
   created_at: string
   note_count: number
   readers?: { id: string; display_name: string }[]
@@ -33,6 +36,7 @@ type AdminNote = {
   created_at: string
   member_name: string
   book_title: string
+  attachments?: Attachment[]
 }
 
 const BOOK_TYPES = ['Nonfiksi', 'Fiksi', 'Komik', 'Artikel', 'Jurnal', 'Kitab Suci']
@@ -54,10 +58,8 @@ const inputStyle: React.CSSProperties = {
   color: 'var(--brown-dark)',
   background: 'transparent',
   border: 'none',
-  borderBottom: '1px solid var(--brown-light)',
   outline: 'none',
-  padding: '2px 0',
-  width: '100%',
+  padding: '4px 0',
 }
 
 const btnBase: React.CSSProperties = {
@@ -74,6 +76,13 @@ export default function AdminPage() {
   const [data, setData] = useState<AdminData | null>(null)
   const [loading, setLoading] = useState(true)
   const [unauthorized, setUnauthorized] = useState(false)
+  const [totalCounters, setTotalCounters] = useState<{ books: number; members: number; notes: number }>({
+    books: 0,
+    members: 0,
+    notes: 0,
+  })
+  const [allBookTypes, setAllBookTypes] = useState<string[]>([])
+  const [initialLoadDone, setInitialLoadDone] = useState(false)
   const [tab, setTab] = useState<Tab>('books')
   const [editTarget, setEditTarget] = useState<EditTarget>(null)
   const [editValues, setEditValues] = useState<Record<string, string>>({})
@@ -83,7 +92,12 @@ export default function AdminPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [notePreview, setNotePreview] = useState(false)
-  
+  const [uploadingNoteId, setUploadingNoteId] = useState<string | null>(null)
+  const [deletingAttachmentId, setDeletingAttachmentId] = useState<string | null>(null)
+  const addFilesRef = useRef<FileList | null>(null)
+  const addCoverRef = useRef<File | null>(null)
+  const editCoverRef = useRef<File | null>(null)
+
   // Filter states
   const [bookTypeFilter, setBookTypeFilter] = useState<string | null>(null)
   const [bookReaderFilter, setBookReaderFilter] = useState<string | null>(null)
@@ -131,6 +145,19 @@ export default function AdminPage() {
       }
       const json = await res.json()
       setData(json)
+      // Only update total counters on initial load
+      if (!initialLoadDone) {
+        setTotalCounters({
+          books: json.books.length,
+          members: json.members.length,
+          notes: json.notes.length,
+        })
+        // Store all book types from initial load
+        const types = [...new Set(json.books.map((b: AdminBook) => b.type))]
+          .filter((t): t is string => t !== null && t !== '')
+        setAllBookTypes(types)
+        setInitialLoadDone(true)
+      }
     } catch {
       setErrorMessage('Gagal memuat data.')
     } finally {
@@ -170,8 +197,24 @@ export default function AdminPage() {
         body = { display_name: editValues.display_name, wa_phone: editValues.wa_phone }
         url = `/api/admin/members/${editTarget.id}`
       } else if (editTarget.type === 'books') {
-        body = { title: editValues.title, author: editValues.author || null, type: editValues.type || null }
         url = `/api/admin/books/${editTarget.id}`
+        const form = new FormData()
+        form.append('title', editValues.title ?? '')
+        form.append('author', editValues.author ?? '')
+        form.append('type', editValues.type ?? '')
+        if (editCoverRef.current) form.append('file', editCoverRef.current)
+
+        const res = await fetch(apiUrl(url), { method: 'PATCH', body: form })
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}))
+          showError(j.error ?? 'Gagal menyimpan.')
+          return
+        }
+        const updated = await res.json()
+        setData({ ...data, books: data.books.map(b => b.id === editTarget.id ? { ...b, ...updated } : b) })
+        cancelEdit()
+        editCoverRef.current = null
+        return
       } else {
         body = { content: editValues.content, sort_order: editValues.sort_order || null }
         url = `/api/admin/notes/${editTarget.id}`
@@ -191,18 +234,12 @@ export default function AdminPage() {
 
       if (editTarget.type === 'members') {
         setData({ ...data, members: data.members.map(m => m.id === editTarget.id ? { ...m, ...updated } : m) })
-        // update member_name in notes too
         setData(d => d ? {
           ...d,
           notes: d.notes.map(n => n.member_id === editTarget.id ? { ...n, member_name: updated.display_name } : n)
         } : d)
-      } else if (editTarget.type === 'books') {
-        setData({ ...data, books: data.books.map(b => b.id === editTarget.id ? { ...b, ...updated } : b) })
-        setData(d => d ? {
-          ...d,
-          notes: d.notes.map(n => n.book_id === editTarget.id ? { ...n, book_title: updated.title } : n)
-        } : d)
       } else {
+        // notes
         setData({ ...data, notes: data.notes.map(n => n.id === editTarget.id ? { ...n, ...updated } : n) })
       }
       cancelEdit()
@@ -246,6 +283,11 @@ export default function AdminPage() {
           members: d.members.filter(m => m.id !== deletedId),
           notes: d.notes.filter(n => n.member_id !== deletedId),
         } : d)
+        setTotalCounters(prev => ({
+          ...prev,
+          members: prev.members - 1,
+          notes: prev.notes - (data.notes.filter(n => n.member_id === deletedId).length),
+        }))
       } else if (deleteTarget.type === 'books') {
         const deletedId = deleteTarget.id
         setData(d => d ? {
@@ -253,9 +295,18 @@ export default function AdminPage() {
           books: d.books.filter(b => b.id !== deletedId),
           notes: d.notes.filter(n => n.book_id !== deletedId),
         } : d)
+        setTotalCounters(prev => ({
+          ...prev,
+          books: prev.books - 1,
+          notes: prev.notes - (data.notes.filter(n => n.book_id === deletedId).length),
+        }))
       } else {
         const deletedId = deleteTarget.id
         setData(d => d ? { ...d, notes: d.notes.filter(n => n.id !== deletedId) } : d)
+        setTotalCounters(prev => ({
+          ...prev,
+          notes: prev.notes - 1,
+        }))
       }
       setDeleteTarget(null)
     } finally {
@@ -274,6 +325,8 @@ export default function AdminPage() {
   function cancelAdd() {
     setAddForm(null)
     setAddValues({})
+    addFilesRef.current = null
+    addCoverRef.current = null
   }
 
   async function submitAdd() {
@@ -288,7 +341,26 @@ export default function AdminPage() {
         body = { wa_phone: addValues.wa_phone?.trim(), display_name: addValues.display_name?.trim() }
       } else if (addForm === 'book') {
         url = '/api/admin/books'
-        body = { title: addValues.title?.trim(), author: addValues.author?.trim() || null, type: addValues.type?.trim() || null }
+        const form = new FormData()
+        form.append('title', addValues.title?.trim() ?? '')
+        if (addValues.author?.trim()) form.append('author', addValues.author.trim())
+        if (addValues.type?.trim()) form.append('type', addValues.type.trim())
+        if (addCoverRef.current) form.append('file', addCoverRef.current)
+
+        const res = await fetch(apiUrl(url), { method: 'POST', body: form })
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}))
+          showError(j.error ?? 'Gagal menambah data.')
+          return
+        }
+        const created = await res.json()
+        setData(d => d ? { ...d, books: [{ ...created, note_count: 0 }, ...d.books] } : d)
+        setTotalCounters(prev => ({
+          ...prev,
+          books: prev.books + 1,
+        }))
+        cancelAdd()
+        return
       } else {
         url = '/api/admin/notes'
         body = {
@@ -313,15 +385,32 @@ export default function AdminPage() {
 
       if (addForm === 'member') {
         setData(d => d ? { ...d, members: [{ ...created, note_count: 0 }, ...d.members] } : d)
-      } else if (addForm === 'book') {
-        setData(d => d ? { ...d, books: [{ ...created, note_count: 0 }, ...d.books] } : d)
+        setTotalCounters(prev => ({
+          ...prev,
+          members: prev.members + 1,
+        }))
       } else {
         const member = data.members.find(m => m.id === addValues.member_id)
         const book = data.books.find(b => b.id === addValues.book_id)
+
+        // Upload attachments if any files were selected
+        let attachments: Attachment[] = []
+        const files = addFilesRef.current
+        if (files && files.length > 0) {
+          const form = new FormData()
+          form.append('note_id', created.id)
+          for (const file of Array.from(files)) form.append('file', file)
+          const attRes = await fetch(apiUrl('/api/admin/attachments'), { method: 'POST', body: form })
+          if (attRes.ok) {
+            attachments = await attRes.json()
+          }
+        }
+
         const newNote: AdminNote = {
           ...created,
           member_name: member?.display_name ?? '',
           book_title: book?.title ?? '',
+          attachments,
         }
         setData(d => d ? {
           ...d,
@@ -329,6 +418,10 @@ export default function AdminPage() {
           members: d.members.map(m => m.id === addValues.member_id ? { ...m, note_count: m.note_count + 1 } : m),
           books: d.books.map(b => b.id === addValues.book_id ? { ...b, note_count: b.note_count + 1 } : b),
         } : d)
+        setTotalCounters(prev => ({
+          ...prev,
+          notes: prev.notes + 1,
+        }))
       }
       cancelAdd()
     } finally {
@@ -336,17 +429,56 @@ export default function AdminPage() {
     }
   }
 
-  // ── RENDER ────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-        <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>
-          Memuat data admin...
-        </p>
-      </div>
-    )
+  // ── ATTACHMENTS ───────────────────────────────────────
+  async function uploadAttachments(noteId: string, files: FileList) {
+    setUploadingNoteId(noteId)
+    try {
+      const form = new FormData()
+      form.append('note_id', noteId)
+      for (const file of Array.from(files)) {
+        form.append('file', file)
+      }
+      const res = await fetch(apiUrl('/api/admin/attachments'), { method: 'POST', body: form })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        showError(j.error ?? 'Gagal mengunggah foto.')
+        return
+      }
+      const newAttachments: Attachment[] = await res.json()
+      setData(d => d ? {
+        ...d,
+        notes: d.notes.map(n => n.id === noteId
+          ? { ...n, attachments: [...(n.attachments ?? []), ...newAttachments] }
+          : n
+        )
+      } : d)
+    } finally {
+      setUploadingNoteId(null)
+    }
   }
 
+  async function deleteAttachment(noteId: string, attachmentId: string) {
+    setDeletingAttachmentId(attachmentId)
+    try {
+      const res = await fetch(apiUrl(`/api/admin/attachments/${attachmentId}`), { method: 'DELETE' })
+      if (!res.ok) {
+        const j = await res.json()
+        showError(j.error ?? 'Gagal menghapus foto.')
+        return
+      }
+      setData(d => d ? {
+        ...d,
+        notes: d.notes.map(n => n.id === noteId
+          ? { ...n, attachments: (n.attachments ?? []).filter(a => a.id !== attachmentId) }
+          : n
+        )
+      } : d)
+    } finally {
+      setDeletingAttachmentId(null)
+    }
+  }
+
+  // ── RENDER ────────────────────────────────────────────
   if (unauthorized) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 12 }}>
@@ -358,7 +490,15 @@ export default function AdminPage() {
     )
   }
 
-  if (!data) return null
+  if (!data) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+        <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+          Memuat data admin...
+        </p>
+      </div>
+    )
+  }
 
   const addLabel = tab === 'members' ? 'Anggota' : tab === 'books' ? 'Buku' : 'Catatan'
   const addFormType: AddForm = tab === 'members' ? 'member' : tab === 'books' ? 'book' : 'note'
@@ -372,9 +512,9 @@ export default function AdminPage() {
         </h1>
         <div style={{ display: 'flex', gap: 20, marginTop: 12 }}>
           {[
-            { label: 'Buku', count: data.books.length },
-            { label: 'Pembaca', count: data.members.length },
-            { label: 'Catatan', count: data.notes.length },
+            { label: 'Buku', count: totalCounters.books },
+            { label: 'Pembaca', count: totalCounters.members },
+            { label: 'Catatan', count: totalCounters.notes },
           ].map(s => (
             <span key={s.label} style={{ fontFamily: 'Crimson Pro, serif', fontSize: 15, color: 'var(--text-muted)' }}>
               <strong style={{ color: 'var(--amber)' }}>{s.count}</strong> {s.label}
@@ -488,8 +628,20 @@ export default function AdminPage() {
                     style={{ ...inputStyle, width: 'auto', minWidth: 160 }}
                   >
                     <option value="">— pilih tipe —</option>
-                    {BOOK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    {allBookTypes.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
+                </div>
+                <div>
+                  <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Cover (opsional)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={e => {
+                      addCoverRef.current = e.target.files?.[0] ?? null
+                      setAddValues(p => ({ ...p, _coverName: e.target.files?.[0]?.name ?? '' }))
+                    }}
+                    style={{ fontFamily: 'Crimson Pro, serif', fontSize: 14, color: 'var(--brown-dark)' }}
+                  />
                 </div>
               </>
             )}
@@ -510,16 +662,15 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Buku</label>
-                  <select
+                  <SearchableBookSelect
+                    books={data.books.map(b => ({ id: b.id, title: b.title }))}
                     value={addValues.book_id ?? ''}
-                    onChange={e => setAddValues(p => ({ ...p, book_id: e.target.value }))}
-                    style={{ ...inputStyle, width: 'auto', minWidth: 200 }}
-                  >
-                    <option value="">Pilih buku...</option>
-                    {data.books.map(b => (
-                      <option key={b.id} value={b.id}>{b.title}</option>
-                    ))}
-                  </select>
+                    onChange={v => setAddValues(p => ({ ...p, book_id: v }))}
+                    selectedMemberId={addValues.member_id}
+                    allNotes={data.notes}
+                    placeholder="Cari buku..."
+                    emptyLabel="Tidak ada buku ditemukan"
+                  />
                 </div>
                 <div>
                   <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Catatan</label>
@@ -530,6 +681,24 @@ export default function AdminPage() {
                     rows={3}
                     style={{ ...inputStyle, resize: 'vertical', fontFamily: 'Crimson Pro, serif', fontSize: 15 }}
                   />
+                </div>
+                <div>
+                  <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Foto (opsional)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={e => {
+                      addFilesRef.current = e.target.files
+                      setAddValues(p => ({ ...p, _fileCount: String(e.target.files?.length ?? 0) }))
+                    }}
+                    style={{ fontFamily: 'Crimson Pro, serif', fontSize: 14, color: 'var(--brown-dark)' }}
+                  />
+                  {addValues._fileCount && Number(addValues._fileCount) > 0 && (
+                    <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 13, color: 'var(--text-muted)', marginLeft: 8 }}>
+                      {addValues._fileCount} foto dipilih
+                    </span>
+                  )}
                 </div>
               </>
             )}
@@ -553,6 +722,7 @@ export default function AdminPage() {
           editValues={editValues}
           deleteTarget={deleteTarget}
           saving={saving}
+          loading={loading}
           onEdit={(id, vals) => startEdit('members', id, vals)}
           onEditChange={setEditValues}
           onSaveEdit={saveEdit}
@@ -566,6 +736,7 @@ export default function AdminPage() {
         <>
           <BookFilters
             members={data.members}
+            types={allBookTypes}
             selectedType={bookTypeFilter}
             selectedReader={bookReaderFilter}
             selectedTitle={bookTitleFilter}
@@ -575,15 +746,18 @@ export default function AdminPage() {
           />
           <BooksList
             books={data.books}
+            allBookTypes={allBookTypes}
             editTarget={editTarget}
             editValues={editValues}
             deleteTarget={deleteTarget}
             saving={saving}
+            loading={loading}
             hasActiveFilters={!!bookTypeFilter || !!bookReaderFilter || !!bookTitleFilter}
-            onEdit={(id, vals) => startEdit('books', id, vals)}
+            editCoverRef={editCoverRef}
+            onEdit={(id, vals) => { startEdit('books', id, vals); editCoverRef.current = null }}
             onEditChange={setEditValues}
             onSaveEdit={saveEdit}
-            onCancelEdit={cancelEdit}
+            onCancelEdit={() => { cancelEdit(); editCoverRef.current = null }}
             onDelete={(id, label) => startDelete('books', id, label)}
             onConfirmDelete={confirmDelete}
             onCancelDelete={cancelDelete}
@@ -608,8 +782,11 @@ export default function AdminPage() {
             editValues={editValues}
             deleteTarget={deleteTarget}
             saving={saving}
+            loading={loading}
             notePreview={notePreview}
             hasActiveFilters={!!noteMemberFilter || !!noteBookFilter || !!noteBookTitleFilter}
+            uploadingNoteId={uploadingNoteId}
+            deletingAttachmentId={deletingAttachmentId}
             onTogglePreview={() => setNotePreview(p => !p)}
             onEdit={(id, vals) => { startEdit('notes', id, vals); setNotePreview(false) }}
             onEditChange={setEditValues}
@@ -618,6 +795,8 @@ export default function AdminPage() {
             onDelete={(id, label) => startDelete('notes', id, label)}
             onConfirmDelete={confirmDelete}
             onCancelDelete={cancelDelete}
+            onUploadAttachments={uploadAttachments}
+            onDeleteAttachment={deleteAttachment}
           />
         </>
       )}
@@ -687,12 +866,13 @@ function ActionButtons({ isEditing, isDeleting, deleteLabel, saving, onEdit, onD
 }
 
 // ── MEMBERS LIST ────────────────────────────────────────
-function MembersList({ members, editTarget, editValues, deleteTarget, saving, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete }: {
+function MembersList({ members, editTarget, editValues, deleteTarget, saving, loading, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete }: {
   members: AdminMember[]
   editTarget: EditTarget
   editValues: Record<string, string>
   deleteTarget: DeleteTarget
   saving: boolean
+  loading: boolean
   onEdit: (id: string, vals: Record<string, string>) => void
   onEditChange: (vals: Record<string, string>) => void
   onSaveEdit: () => void
@@ -701,8 +881,17 @@ function MembersList({ members, editTarget, editValues, deleteTarget, saving, on
   onConfirmDelete: () => void
   onCancelDelete: () => void
 }) {
-  if (members.length === 0) {
+  if (members.length === 0 && !loading) {
     return <EmptyState text="Belum ada anggota." />
+  }
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '20px 0' }}>
+        <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+          Memuat data...
+        </p>
+      </div>
+    )
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -781,12 +970,14 @@ function MembersList({ members, editTarget, editValues, deleteTarget, saving, on
 }
 
 // ── BOOKS LIST ──────────────────────────────────────────
-function BooksList({ books, editTarget, editValues, deleteTarget, saving, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete, hasActiveFilters }: {
+function BooksList({ books, allBookTypes, editTarget, editValues, deleteTarget, saving, loading, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete, hasActiveFilters, editCoverRef }: {
   books: AdminBook[]
+  allBookTypes: string[]
   editTarget: EditTarget
   editValues: Record<string, string>
   deleteTarget: DeleteTarget
   saving: boolean
+  loading: boolean
   onEdit: (id: string, vals: Record<string, string>) => void
   onEditChange: (vals: Record<string, string>) => void
   onSaveEdit: () => void
@@ -795,9 +986,19 @@ function BooksList({ books, editTarget, editValues, deleteTarget, saving, onEdit
   onConfirmDelete: () => void
   onCancelDelete: () => void
   hasActiveFilters?: boolean
+  editCoverRef: React.MutableRefObject<File | null>
 }) {
-  if (books.length === 0) {
+  if (books.length === 0 && !loading) {
     return <EmptyState text={hasActiveFilters ? "Tidak ada buku yang sesuai dengan filter." : "Belum ada buku."} />
+  }
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '20px 0' }}>
+        <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+          Memuat data...
+        </p>
+      </div>
+    )
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -815,13 +1016,23 @@ function BooksList({ books, editTarget, editValues, deleteTarget, saving, onEdit
             alignItems: 'flex-start',
             gap: 14,
           }}>
-            <div style={{
-              width: 38, height: 38, borderRadius: 6, flexShrink: 0,
-              background: 'var(--brown-mid)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'Lora, serif', fontSize: 16, color: '#fff',
-            }}>
-              📖
+            <div style={{ width: 38, flexShrink: 0 }}>
+              {b.cover_url ? (
+                <img
+                  src={b.cover_url}
+                  alt={b.title}
+                  style={{ width: 38, height: 'auto', borderRadius: 4, display: 'block', objectFit: 'cover' }}
+                />
+              ) : (
+                <div style={{
+                  width: 38, height: 38, borderRadius: 6,
+                  background: 'var(--brown-mid)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'Lora, serif', fontSize: 16, color: '#fff',
+                }}>
+                  📖
+                </div>
+              )}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               {isEditing ? (
@@ -847,8 +1058,19 @@ function BooksList({ books, editTarget, editValues, deleteTarget, saving, onEdit
                     style={{ ...inputStyle, width: 'auto', minWidth: 140, fontSize: 13 }}
                   >
                     <option value="">— tipe —</option>
-                    {BOOK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    {allBookTypes.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
+                  <div style={{ marginTop: 6 }}>
+                    <label style={{ fontFamily: 'Lora, serif', fontSize: 11, color: 'var(--text-muted)', display: 'block', marginBottom: 3 }}>
+                      {b.cover_url ? 'Ganti cover' : 'Upload cover'} (opsional)
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={e => { editCoverRef.current = e.target.files?.[0] ?? null }}
+                      style={{ fontFamily: 'Crimson Pro, serif', fontSize: 13, color: 'var(--brown-dark)' }}
+                    />
+                  </div>
                 </>
               ) : (
                 <>
@@ -876,7 +1098,7 @@ function BooksList({ books, editTarget, editValues, deleteTarget, saving, onEdit
               isDeleting={isDeleting}
               deleteLabel={`"${b.title}" + ${b.note_count} catatan`}
               saving={saving}
-              onEdit={() => onEdit(b.id, { title: b.title, author: b.author ?? '', type: b.type ?? '' })}
+              onEdit={() => onEdit(b.id, { title: b.title, author: b.author ?? '', type: b.type ?? '', cover_url: b.cover_url ?? '' })}
               onDelete={() => onDelete(b.id, `"${b.title}"`)}
               onSaveEdit={onSaveEdit}
               onCancelEdit={onCancelEdit}
@@ -891,12 +1113,13 @@ function BooksList({ books, editTarget, editValues, deleteTarget, saving, onEdit
 }
 
 // ── NOTES LIST ──────────────────────────────────────────
-function NotesList({ notes, editTarget, editValues, deleteTarget, saving, notePreview, onTogglePreview, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete, hasActiveFilters }: {
+function NotesList({ notes, editTarget, editValues, deleteTarget, saving, loading, notePreview, onTogglePreview, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete, hasActiveFilters, uploadingNoteId, deletingAttachmentId, onUploadAttachments, onDeleteAttachment }: {
   notes: AdminNote[]
   editTarget: EditTarget
   editValues: Record<string, string>
   deleteTarget: DeleteTarget
   saving: boolean
+  loading: boolean
   notePreview: boolean
   onTogglePreview: () => void
   onEdit: (id: string, vals: Record<string, string>) => void
@@ -907,9 +1130,24 @@ function NotesList({ notes, editTarget, editValues, deleteTarget, saving, notePr
   onConfirmDelete: () => void
   onCancelDelete: () => void
   hasActiveFilters?: boolean
+  uploadingNoteId: string | null
+  deletingAttachmentId: string | null
+  onUploadAttachments: (noteId: string, files: FileList) => void
+  onDeleteAttachment: (noteId: string, attachmentId: string) => void
 }) {
-  if (notes.length === 0) {
+  const [confirmDeleteAttachmentId, setConfirmDeleteAttachmentId] = useState<string | null>(null)
+
+  if (notes.length === 0 && !loading) {
     return <EmptyState text={hasActiveFilters ? "Tidak ada catatan yang sesuai dengan filter." : "Belum ada catatan."} />
+  }
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '20px 0' }}>
+        <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+          Memuat data...
+        </p>
+      </div>
+    )
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1016,6 +1254,100 @@ function NotesList({ notes, editTarget, editValues, deleteTarget, saving, notePr
                 {n.content}
               </p>
             )}
+
+            {/* Attachments section */}
+            <div style={{ marginTop: 12 }}>
+              {/* Existing thumbnails */}
+              {n.attachments && n.attachments.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                  {n.attachments.map(att => (
+                    <div key={att.id} style={{ position: 'relative', width: 80 }}>
+                      <a
+                        href={att.signed_url ?? '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: 'block', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)' }}
+                      >
+                        <img
+                          src={att.signed_url ?? ''}
+                          alt={att.file_name ?? 'attachment'}
+                          style={{ width: '100%', height: 'auto', display: 'block' }}
+                        />
+                      </a>
+                      {confirmDeleteAttachmentId === att.id ? (
+                        <div style={{
+                          position: 'absolute', top: -8, right: -8,
+                          background: 'var(--card-bg)', border: '1px solid var(--border)',
+                          borderRadius: 8, padding: '4px 6px',
+                          display: 'flex', gap: 4, alignItems: 'center',
+                          boxShadow: '0 2px 8px rgba(44,26,14,0.15)',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          <button
+                            onClick={() => { setConfirmDeleteAttachmentId(null); onDeleteAttachment(n.id, att.id) }}
+                            disabled={deletingAttachmentId === att.id}
+                            style={{ ...btnBase, fontSize: 11, padding: '2px 8px', background: '#c0392b', color: '#fff' }}
+                          >
+                            Hapus
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteAttachmentId(null)}
+                            style={{ ...btnBase, fontSize: 11, padding: '2px 8px', background: 'var(--card-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDeleteAttachmentId(att.id)}
+                          disabled={deletingAttachmentId === att.id}
+                          style={{
+                            position: 'absolute', top: -6, right: -6,
+                            width: 20, height: 20, borderRadius: '50%',
+                            background: '#c0392b', color: '#fff',
+                            border: 'none', cursor: 'pointer',
+                            fontSize: 11, lineHeight: '1', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            opacity: deletingAttachmentId === att.id ? 0.5 : 1,
+                          }}
+                          title="Hapus foto"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Upload input */}
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  style={{ display: 'none' }}
+                  disabled={uploadingNoteId === n.id}
+                  onChange={e => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      onUploadAttachments(n.id, e.target.files)
+                      e.target.value = ''
+                    }
+                  }}
+                />
+                <span style={{
+                  fontFamily: 'Lora, serif',
+                  fontSize: 12,
+                  color: uploadingNoteId === n.id ? 'var(--text-muted)' : '#D4824A',
+                  border: '1px solid #D4824A',
+                  borderRadius: 6,
+                  padding: '3px 10px',
+                  opacity: uploadingNoteId === n.id ? 0.6 : 1,
+                  transition: 'all 0.15s',
+                }}>
+                  {uploadingNoteId === n.id ? 'Mengunggah...' : '+ Foto'}
+                </span>
+              </label>
+            </div>
           </div>
         )
       })}
@@ -1124,22 +1456,19 @@ function NotesFilter({ members, books, selectedMember, selectedBook, selectedBoo
           </select>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 200 }}>
           <span style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             Buku:
           </span>
-          <select
-            value={selectedBook || ''}
-            onChange={e => onBookChange(e.target.value || null)}
-            style={selectStyle}
-          >
-            <option value="">Semua buku</option>
-            {books.map(b => (
-              <option key={b.id} value={b.id}>
-                {b.title}
-              </option>
-            ))}
-          </select>
+          <div style={{ flex: 1, maxWidth: 280 }}>
+            <SearchableBookSelect
+              books={books.map(b => ({ id: b.id, title: b.title }))}
+              value={selectedBook || ''}
+              onChange={v => onBookChange(v || null)}
+              placeholder="Semua buku"
+              emptyLabel="Tidak ada buku ditemukan"
+            />
+          </div>
         </div>
 
         {hasActiveFilters && (
@@ -1168,8 +1497,8 @@ function NotesFilter({ members, books, selectedMember, selectedBook, selectedBoo
 // ── EMPTY STATE ─────────────────────────────────────────
 function EmptyState({ text }: { text: string }) {
   return (
-    <div style={{ textAlign: 'center', padding: '48px 0' }}>
-      <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 16, color: 'var(--text-muted)', fontStyle: 'italic' }}>{text}</p>
+    <div style={{ textAlign: 'center', padding: '20px 0' }}>
+      <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>{text}</p>
     </div>
   )
 }

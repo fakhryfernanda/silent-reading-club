@@ -96,18 +96,31 @@ export default function BookPage() {
       {/* Hero */}
       <div style={{ display: 'flex', gap: 36, padding: '32px 0 36px', borderBottom: '1px solid var(--border)', marginBottom: 48, alignItems: 'flex-start' }}>
         {/* Cover */}
-        <div style={{
-          width: 100, minWidth: 100, height: 148, borderRadius: 6,
-          background: `linear-gradient(135deg, ${avatarColor(book.title)} 0%, var(--brown-mid) 100%)`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '4px 6px 20px rgba(44,26,14,0.2), inset -3px 0 8px rgba(0,0,0,0.15)',
-          position: 'relative', overflow: 'hidden',
-        }}>
-          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 8, background: 'rgba(0,0,0,0.15)', borderRadius: '6px 0 0 6px' }} />
-          <span style={{ fontFamily: 'Lora, serif', fontSize: 36, fontWeight: 600, color: 'rgba(255,255,255,0.6)', zIndex: 1 }}>
-            {initials(book.title)}
-          </span>
-        </div>
+        {book.cover_url ? (
+          <img
+            src={book.cover_url}
+            alt={book.title}
+            style={{
+              width: 100, minWidth: 100, borderRadius: 6,
+              height: 'auto', display: 'block',
+              boxShadow: '4px 6px 20px rgba(44,26,14,0.2)',
+              objectFit: 'cover',
+            }}
+          />
+        ) : (
+          <div style={{
+            width: 100, minWidth: 100, height: 148, borderRadius: 6,
+            background: `linear-gradient(135deg, ${avatarColor(book.title)} 0%, var(--brown-mid) 100%)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '4px 6px 20px rgba(44,26,14,0.2), inset -3px 0 8px rgba(0,0,0,0.15)',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 8, background: 'rgba(0,0,0,0.15)', borderRadius: '6px 0 0 6px' }} />
+            <span style={{ fontFamily: 'Lora, serif', fontSize: 36, fontWeight: 600, color: 'rgba(255,255,255,0.6)', zIndex: 1 }}>
+              {initials(book.title)}
+            </span>
+          </div>
+        )}
 
         {/* Meta */}
         <div style={{ flex: 1 }}>
@@ -275,6 +288,36 @@ export default function BookPage() {
                   )
                 })()}
               </div>
+
+              {/* Attachments */}
+              {note.attachments && note.attachments.length > 0 && (
+                <div style={{
+                  paddingLeft: 40,
+                  marginTop: 16,
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                  gap: 8,
+                  maxWidth: 420,
+                }}>
+                  {note.attachments.map(att => (
+                    <a
+                      key={att.id}
+                      href={att.signed_url ?? '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: 'block', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)', transition: 'opacity 0.15s' }}
+                      onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
+                      onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                    >
+                      <img
+                        src={att.signed_url ?? ''}
+                        alt={att.file_name ?? 'attachment'}
+                        style={{ width: '100%', height: 'auto', display: 'block' }}
+                      />
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           ))
         )}
