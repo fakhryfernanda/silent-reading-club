@@ -71,8 +71,3 @@ Desktop.ini
 *.pem
 .vercel
 *.tgz
-
-# Local files (examples, drafts, personal notes)
-scratch/
-notes/
-TODO.md

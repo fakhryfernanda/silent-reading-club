@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import { Book, Note } from '@/lib/types'
 import { timeAgo, avatarColor, initials } from '@/lib/utils'
+import ImageCarousel from '@/components/ImageCarousel'
 
 type BookDetail = {
   book: Book
@@ -21,6 +22,9 @@ export default function BookPage() {
   const [loading, setLoading] = useState(true)
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set())
   const [showBackToTop, setShowBackToTop] = useState(false)
+  const [carouselOpen, setCarouselOpen] = useState(false)
+  const [carouselImages, setCarouselImages] = useState<string[]>([])
+  const [carouselIndex, setCarouselIndex] = useState(0)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -295,26 +299,28 @@ export default function BookPage() {
                   paddingLeft: 40,
                   marginTop: 16,
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fill, 120px)',
                   gap: 8,
-                  maxWidth: 420,
                 }}>
-                  {note.attachments.map(att => (
-                    <a
+                  {note.attachments.map((att, attIndex) => (
+                    <button
                       key={att.id}
-                      href={att.signed_url ?? '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ display: 'block', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)', transition: 'opacity 0.15s' }}
+                      onClick={() => {
+                        const imageUrls = note.attachments!.map(a => a.signed_url!).filter(Boolean)
+                        setCarouselImages(imageUrls)
+                        setCarouselIndex(attIndex)
+                        setCarouselOpen(true)
+                      }}
+                      style={{ display: 'block', width: 120, height: 120, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)', transition: 'opacity 0.15s', cursor: 'pointer', background: 'none', padding: 0 }}
                       onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
                       onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
                     >
                       <img
                         src={att.signed_url ?? ''}
                         alt={att.file_name ?? 'attachment'}
-                        style={{ width: '100%', height: 'auto', display: 'block' }}
+                        style={{ width: 120, height: 120, display: 'block', objectFit: 'cover', objectPosition: 'center' }}
                       />
-                    </a>
+                    </button>
                   ))}
                 </div>
               )}
@@ -355,6 +361,15 @@ export default function BookPage() {
       >
         ↑ Kembali ke atas
       </button>
+
+      {/* Image Carousel Modal */}
+      {carouselOpen && (
+        <ImageCarousel
+          images={carouselImages}
+          initialIndex={carouselIndex}
+          onClose={() => setCarouselOpen(false)}
+        />
+      )}
     </div>
   )
 }
