@@ -58,10 +58,8 @@ const inputStyle: React.CSSProperties = {
   color: 'var(--brown-dark)',
   background: 'transparent',
   border: 'none',
-  borderBottom: '1px solid var(--brown-light)',
   outline: 'none',
-  padding: '2px 0',
-  width: '100%',
+  padding: '4px 0',
 }
 
 const btnBase: React.CSSProperties = {
@@ -78,6 +76,13 @@ export default function AdminPage() {
   const [data, setData] = useState<AdminData | null>(null)
   const [loading, setLoading] = useState(true)
   const [unauthorized, setUnauthorized] = useState(false)
+  const [totalCounters, setTotalCounters] = useState<{ books: number; members: number; notes: number }>({
+    books: 0,
+    members: 0,
+    notes: 0,
+  })
+  const [allBookTypes, setAllBookTypes] = useState<string[]>([])
+  const [initialLoadDone, setInitialLoadDone] = useState(false)
   const [tab, setTab] = useState<Tab>('books')
   const [editTarget, setEditTarget] = useState<EditTarget>(null)
   const [editValues, setEditValues] = useState<Record<string, string>>({})
@@ -140,6 +145,19 @@ export default function AdminPage() {
       }
       const json = await res.json()
       setData(json)
+      // Only update total counters on initial load
+      if (!initialLoadDone) {
+        setTotalCounters({
+          books: json.books.length,
+          members: json.members.length,
+          notes: json.notes.length,
+        })
+        // Store all book types from initial load
+        const types = [...new Set(json.books.map((b: AdminBook) => b.type))]
+          .filter((t): t is string => t !== null && t !== '')
+        setAllBookTypes(types)
+        setInitialLoadDone(true)
+      }
     } catch {
       setErrorMessage('Gagal memuat data.')
     } finally {
@@ -265,6 +283,11 @@ export default function AdminPage() {
           members: d.members.filter(m => m.id !== deletedId),
           notes: d.notes.filter(n => n.member_id !== deletedId),
         } : d)
+        setTotalCounters(prev => ({
+          ...prev,
+          members: prev.members - 1,
+          notes: prev.notes - (data.notes.filter(n => n.member_id === deletedId).length),
+        }))
       } else if (deleteTarget.type === 'books') {
         const deletedId = deleteTarget.id
         setData(d => d ? {
@@ -272,9 +295,18 @@ export default function AdminPage() {
           books: d.books.filter(b => b.id !== deletedId),
           notes: d.notes.filter(n => n.book_id !== deletedId),
         } : d)
+        setTotalCounters(prev => ({
+          ...prev,
+          books: prev.books - 1,
+          notes: prev.notes - (data.notes.filter(n => n.book_id === deletedId).length),
+        }))
       } else {
         const deletedId = deleteTarget.id
         setData(d => d ? { ...d, notes: d.notes.filter(n => n.id !== deletedId) } : d)
+        setTotalCounters(prev => ({
+          ...prev,
+          notes: prev.notes - 1,
+        }))
       }
       setDeleteTarget(null)
     } finally {
@@ -323,6 +355,10 @@ export default function AdminPage() {
         }
         const created = await res.json()
         setData(d => d ? { ...d, books: [{ ...created, note_count: 0 }, ...d.books] } : d)
+        setTotalCounters(prev => ({
+          ...prev,
+          books: prev.books + 1,
+        }))
         cancelAdd()
         return
       } else {
@@ -349,6 +385,10 @@ export default function AdminPage() {
 
       if (addForm === 'member') {
         setData(d => d ? { ...d, members: [{ ...created, note_count: 0 }, ...d.members] } : d)
+        setTotalCounters(prev => ({
+          ...prev,
+          members: prev.members + 1,
+        }))
       } else {
         const member = data.members.find(m => m.id === addValues.member_id)
         const book = data.books.find(b => b.id === addValues.book_id)
@@ -378,6 +418,10 @@ export default function AdminPage() {
           members: d.members.map(m => m.id === addValues.member_id ? { ...m, note_count: m.note_count + 1 } : m),
           books: d.books.map(b => b.id === addValues.book_id ? { ...b, note_count: b.note_count + 1 } : b),
         } : d)
+        setTotalCounters(prev => ({
+          ...prev,
+          notes: prev.notes + 1,
+        }))
       }
       cancelAdd()
     } finally {
@@ -435,16 +479,6 @@ export default function AdminPage() {
   }
 
   // ── RENDER ────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-        <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>
-          Memuat data admin...
-        </p>
-      </div>
-    )
-  }
-
   if (unauthorized) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 12 }}>
@@ -456,7 +490,15 @@ export default function AdminPage() {
     )
   }
 
-  if (!data) return null
+  if (!data) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+        <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+          Memuat data admin...
+        </p>
+      </div>
+    )
+  }
 
   const addLabel = tab === 'members' ? 'Anggota' : tab === 'books' ? 'Buku' : 'Catatan'
   const addFormType: AddForm = tab === 'members' ? 'member' : tab === 'books' ? 'book' : 'note'
@@ -470,9 +512,9 @@ export default function AdminPage() {
         </h1>
         <div style={{ display: 'flex', gap: 20, marginTop: 12 }}>
           {[
-            { label: 'Buku', count: data.books.length },
-            { label: 'Pembaca', count: data.members.length },
-            { label: 'Catatan', count: data.notes.length },
+            { label: 'Buku', count: totalCounters.books },
+            { label: 'Pembaca', count: totalCounters.members },
+            { label: 'Catatan', count: totalCounters.notes },
           ].map(s => (
             <span key={s.label} style={{ fontFamily: 'Crimson Pro, serif', fontSize: 15, color: 'var(--text-muted)' }}>
               <strong style={{ color: 'var(--amber)' }}>{s.count}</strong> {s.label}
@@ -586,7 +628,7 @@ export default function AdminPage() {
                     style={{ ...inputStyle, width: 'auto', minWidth: 160 }}
                   >
                     <option value="">— pilih tipe —</option>
-                    {BOOK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    {allBookTypes.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div>
@@ -680,6 +722,7 @@ export default function AdminPage() {
           editValues={editValues}
           deleteTarget={deleteTarget}
           saving={saving}
+          loading={loading}
           onEdit={(id, vals) => startEdit('members', id, vals)}
           onEditChange={setEditValues}
           onSaveEdit={saveEdit}
@@ -693,6 +736,7 @@ export default function AdminPage() {
         <>
           <BookFilters
             members={data.members}
+            types={allBookTypes}
             selectedType={bookTypeFilter}
             selectedReader={bookReaderFilter}
             selectedTitle={bookTitleFilter}
@@ -702,10 +746,12 @@ export default function AdminPage() {
           />
           <BooksList
             books={data.books}
+            allBookTypes={allBookTypes}
             editTarget={editTarget}
             editValues={editValues}
             deleteTarget={deleteTarget}
             saving={saving}
+            loading={loading}
             hasActiveFilters={!!bookTypeFilter || !!bookReaderFilter || !!bookTitleFilter}
             editCoverRef={editCoverRef}
             onEdit={(id, vals) => { startEdit('books', id, vals); editCoverRef.current = null }}
@@ -736,6 +782,7 @@ export default function AdminPage() {
             editValues={editValues}
             deleteTarget={deleteTarget}
             saving={saving}
+            loading={loading}
             notePreview={notePreview}
             hasActiveFilters={!!noteMemberFilter || !!noteBookFilter || !!noteBookTitleFilter}
             uploadingNoteId={uploadingNoteId}
@@ -819,12 +866,13 @@ function ActionButtons({ isEditing, isDeleting, deleteLabel, saving, onEdit, onD
 }
 
 // ── MEMBERS LIST ────────────────────────────────────────
-function MembersList({ members, editTarget, editValues, deleteTarget, saving, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete }: {
+function MembersList({ members, editTarget, editValues, deleteTarget, saving, loading, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete }: {
   members: AdminMember[]
   editTarget: EditTarget
   editValues: Record<string, string>
   deleteTarget: DeleteTarget
   saving: boolean
+  loading: boolean
   onEdit: (id: string, vals: Record<string, string>) => void
   onEditChange: (vals: Record<string, string>) => void
   onSaveEdit: () => void
@@ -833,8 +881,17 @@ function MembersList({ members, editTarget, editValues, deleteTarget, saving, on
   onConfirmDelete: () => void
   onCancelDelete: () => void
 }) {
-  if (members.length === 0) {
+  if (members.length === 0 && !loading) {
     return <EmptyState text="Belum ada anggota." />
+  }
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '20px 0' }}>
+        <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+          Memuat data...
+        </p>
+      </div>
+    )
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -913,12 +970,14 @@ function MembersList({ members, editTarget, editValues, deleteTarget, saving, on
 }
 
 // ── BOOKS LIST ──────────────────────────────────────────
-function BooksList({ books, editTarget, editValues, deleteTarget, saving, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete, hasActiveFilters, editCoverRef }: {
+function BooksList({ books, allBookTypes, editTarget, editValues, deleteTarget, saving, loading, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete, hasActiveFilters, editCoverRef }: {
   books: AdminBook[]
+  allBookTypes: string[]
   editTarget: EditTarget
   editValues: Record<string, string>
   deleteTarget: DeleteTarget
   saving: boolean
+  loading: boolean
   onEdit: (id: string, vals: Record<string, string>) => void
   onEditChange: (vals: Record<string, string>) => void
   onSaveEdit: () => void
@@ -929,8 +988,17 @@ function BooksList({ books, editTarget, editValues, deleteTarget, saving, onEdit
   hasActiveFilters?: boolean
   editCoverRef: React.MutableRefObject<File | null>
 }) {
-  if (books.length === 0) {
+  if (books.length === 0 && !loading) {
     return <EmptyState text={hasActiveFilters ? "Tidak ada buku yang sesuai dengan filter." : "Belum ada buku."} />
+  }
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '20px 0' }}>
+        <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+          Memuat data...
+        </p>
+      </div>
+    )
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -990,7 +1058,7 @@ function BooksList({ books, editTarget, editValues, deleteTarget, saving, onEdit
                     style={{ ...inputStyle, width: 'auto', minWidth: 140, fontSize: 13 }}
                   >
                     <option value="">— tipe —</option>
-                    {BOOK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    {allBookTypes.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                   <div style={{ marginTop: 6 }}>
                     <label style={{ fontFamily: 'Lora, serif', fontSize: 11, color: 'var(--text-muted)', display: 'block', marginBottom: 3 }}>
@@ -1045,12 +1113,13 @@ function BooksList({ books, editTarget, editValues, deleteTarget, saving, onEdit
 }
 
 // ── NOTES LIST ──────────────────────────────────────────
-function NotesList({ notes, editTarget, editValues, deleteTarget, saving, notePreview, onTogglePreview, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete, hasActiveFilters, uploadingNoteId, deletingAttachmentId, onUploadAttachments, onDeleteAttachment }: {
+function NotesList({ notes, editTarget, editValues, deleteTarget, saving, loading, notePreview, onTogglePreview, onEdit, onEditChange, onSaveEdit, onCancelEdit, onDelete, onConfirmDelete, onCancelDelete, hasActiveFilters, uploadingNoteId, deletingAttachmentId, onUploadAttachments, onDeleteAttachment }: {
   notes: AdminNote[]
   editTarget: EditTarget
   editValues: Record<string, string>
   deleteTarget: DeleteTarget
   saving: boolean
+  loading: boolean
   notePreview: boolean
   onTogglePreview: () => void
   onEdit: (id: string, vals: Record<string, string>) => void
@@ -1068,8 +1137,17 @@ function NotesList({ notes, editTarget, editValues, deleteTarget, saving, notePr
 }) {
   const [confirmDeleteAttachmentId, setConfirmDeleteAttachmentId] = useState<string | null>(null)
 
-  if (notes.length === 0) {
+  if (notes.length === 0 && !loading) {
     return <EmptyState text={hasActiveFilters ? "Tidak ada catatan yang sesuai dengan filter." : "Belum ada catatan."} />
+  }
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '20px 0' }}>
+        <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+          Memuat data...
+        </p>
+      </div>
+    )
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1419,8 +1497,8 @@ function NotesFilter({ members, books, selectedMember, selectedBook, selectedBoo
 // ── EMPTY STATE ─────────────────────────────────────────
 function EmptyState({ text }: { text: string }) {
   return (
-    <div style={{ textAlign: 'center', padding: '48px 0' }}>
-      <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 16, color: 'var(--text-muted)', fontStyle: 'italic' }}>{text}</p>
+    <div style={{ textAlign: 'center', padding: '20px 0' }}>
+      <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>{text}</p>
     </div>
   )
 }
