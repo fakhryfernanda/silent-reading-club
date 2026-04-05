@@ -12,6 +12,7 @@ Website + bot WhatsApp untuk komunitas baca. Tag bot di WhatsApp, notes bacaan k
 - 📄 **Pagination** — 6 buku per halaman (desktop) / 4 (mobile), navigasi client-side
 - 🎨 **Markdown support** — Format notes dengan markdown (bold, italic, list, dll)
 - 🖼️ **Attachment foto** — Upload foto ke catatan via admin panel, tampil di halaman detail buku
+- 🔍 **Image carousel** — Klik attachment untuk buka modal fullscreen dengan navigasi (geser/arrow/keyboard), zoom (+/-/scroll/double-click), dan panning (drag saat zoom)
 - 📕 **Cover buku** — Upload cover buku via admin panel, tampil di homepage dan halaman detail
 - 📚 **Searchable book dropdown** — Pilih buku di admin dengan search, filter "Lanjut baca" / "Buku baru"
 - 🔢 **Urutan catatan** — Sort order sequential (required), auto-reorder saat insert/edit/hapus catatan
@@ -83,7 +84,8 @@ Website buka di [http://localhost:3000](http://localhost:3000)
 - **Detail Buku** — Klik buku untuk lihat semua catatan
   - **Filter pembaca** — Lihat catatan dari pembaca tertentu
   - **Collapse/Expand** — Notes >300 karakter auto-truncate, tombol "Baca selengkapnya ▼" / "Tutup ▲"
-  - **Attachment foto** — Foto yang diupload tampil di bawah konten catatan dengan aspect ratio asli
+  - **Attachment foto** — Thumbnail foto di bawah konten catatan, klik untuk buka carousel fullscreen
+  - **Image Carousel** — Modal fullscreen dengan navigasi panah/swipe, zoom (scroll wheel / tombol +-/double-click), panning (drag saat zoom), keyboard (←→ navigasi, +/- zoom, Esc tutup), gambar portrait memaksimalkan tinggi (90vh), landscape memaksimalkan lebar (90vw)
   - **Cover buku** — Tampil di hero section halaman detail dan sebagai aksen di card homepage
 - **Admin Panel** — Buka `/admin?key=YOUR_SECRET` untuk CRUD data
   - Tab Buku: filter by tipe, pembaca, dan pencarian judul (live search)
