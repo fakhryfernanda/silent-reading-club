@@ -280,15 +280,31 @@ sudo nginx -t
 
 ## 11. Deploy Updates (Git Pull)
 
-Untuk update code di masa depan:
+### Cara 1: Menggunakan deployment script (recommended)
+
+Script `deploy.sh` sudah tersedia untuk handle deployment dengan aman:
+
+```bash
+./deploy.sh
+```
+
+Script ini akan:
+1. Pull latest code dari `main`
+2. Install dependencies
+3. Build production
+4. Graceful reload dengan PM2 (start proses baru dulu, baru kill yang lama)
+
+### Cara 2: Manual
 
 ```bash
 cd ~/silent-reading-club
 git pull origin main
 npm install  # jika ada dependency baru
 npm run build
-pm2 restart silent-reading-club
+pm2 gracefulReload silent-reading-space --kill-timeout 3000
 ```
+
+**Penting:** Gunakan `pm2 gracefulReload` alih-alih `pm2 restart` untuk menghindari port conflict. Graceful reload akan start proses baru terlebih dahulu, baru kill proses lama setelah yang baru ready.
 
 ---
 
