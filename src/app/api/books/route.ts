@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/db'
+import { refreshBookCoverUrl } from '@/lib/refreshCoverUrl'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -19,6 +20,8 @@ export async function GET(req: NextRequest) {
         title,
         author,
         cover_url,
+        cover_r2_key,
+        cover_url_expires_at,
         type,
         created_at,
         notes (
@@ -63,6 +66,8 @@ export async function GET(req: NextRequest) {
         title: book.title,
         author: book.author,
         cover_url: book.cover_url,
+        cover_r2_key: (book as any).cover_r2_key,
+        cover_url_expires_at: (book as any).cover_url_expires_at,
         type: book.type,
         created_at: book.created_at,
         note_count: noteCount,
@@ -102,7 +107,15 @@ export async function GET(req: NextRequest) {
       return new Date(b.latest_note_at).getTime() - new Date(a.latest_note_at).getTime()
     })
 
-    return NextResponse.json(sorted)
+    // Refresh cover signed URLs if needed
+    const withFreshCovers = await Promise.all(
+      (sorted ?? []).map(async book => {
+        const freshUrl = await refreshBookCoverUrl(book as any)
+        return { ...book, cover_url: freshUrl }
+      })
+    )
+
+    return NextResponse.json(withFreshCovers)
   } catch (err) {
     console.error(err)
     return NextResponse.json({ error: 'Database error' }, { status: 500 })

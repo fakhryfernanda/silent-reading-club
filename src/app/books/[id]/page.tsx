@@ -96,18 +96,31 @@ export default function BookPage() {
       {/* Hero */}
       <div style={{ display: 'flex', gap: 36, padding: '32px 0 36px', borderBottom: '1px solid var(--border)', marginBottom: 48, alignItems: 'flex-start' }}>
         {/* Cover */}
-        <div style={{
-          width: 100, minWidth: 100, height: 148, borderRadius: 6,
-          background: `linear-gradient(135deg, ${avatarColor(book.title)} 0%, var(--brown-mid) 100%)`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '4px 6px 20px rgba(44,26,14,0.2), inset -3px 0 8px rgba(0,0,0,0.15)',
-          position: 'relative', overflow: 'hidden',
-        }}>
-          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 8, background: 'rgba(0,0,0,0.15)', borderRadius: '6px 0 0 6px' }} />
-          <span style={{ fontFamily: 'Lora, serif', fontSize: 36, fontWeight: 600, color: 'rgba(255,255,255,0.6)', zIndex: 1 }}>
-            {initials(book.title)}
-          </span>
-        </div>
+        {book.cover_url ? (
+          <img
+            src={book.cover_url}
+            alt={book.title}
+            style={{
+              width: 100, minWidth: 100, borderRadius: 6,
+              height: 'auto', display: 'block',
+              boxShadow: '4px 6px 20px rgba(44,26,14,0.2)',
+              objectFit: 'cover',
+            }}
+          />
+        ) : (
+          <div style={{
+            width: 100, minWidth: 100, height: 148, borderRadius: 6,
+            background: `linear-gradient(135deg, ${avatarColor(book.title)} 0%, var(--brown-mid) 100%)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '4px 6px 20px rgba(44,26,14,0.2), inset -3px 0 8px rgba(0,0,0,0.15)',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 8, background: 'rgba(0,0,0,0.15)', borderRadius: '6px 0 0 6px' }} />
+            <span style={{ fontFamily: 'Lora, serif', fontSize: 36, fontWeight: 600, color: 'rgba(255,255,255,0.6)', zIndex: 1 }}>
+              {initials(book.title)}
+            </span>
+          </div>
+        )}
 
         {/* Meta */}
         <div style={{ flex: 1 }}>

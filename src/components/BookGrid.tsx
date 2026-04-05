@@ -115,6 +115,16 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter }: { ty
             >
               <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: 'linear-gradient(to bottom, var(--amber), var(--brown-light))', borderRadius: '10px 0 0 10px' }} />
 
+              {book.cover_url && (
+                <div style={{ display: 'flex', gap: 14, marginBottom: 10 }}>
+                  <img
+                    src={book.cover_url}
+                    alt={book.title}
+                    style={{ width: 40, height: 'auto', borderRadius: 3, objectFit: 'cover', flexShrink: 0, boxShadow: '2px 2px 6px rgba(44,26,14,0.15)' }}
+                  />
+                </div>
+              )}
+
               <div style={{ fontFamily: 'Lora, serif', fontSize: 17, fontWeight: 600, color: 'var(--brown-dark)', lineHeight: 1.3, marginBottom: 4 }}>
                 {book.title}
               </div>

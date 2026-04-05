@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/db'
 import { refreshAttachmentsForNotes } from '@/lib/refreshAttachments'
+import { refreshBookCoverUrl } from '@/lib/refreshCoverUrl'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -18,6 +19,8 @@ export async function GET(
         title,
         author,
         cover_url,
+        cover_r2_key,
+        cover_url_expires_at,
         type,
         created_at,
         notes (
@@ -82,12 +85,19 @@ export async function GET(
         return a.sort_order - b.sort_order
       }) || []
 
+    const freshCoverUrl = await refreshBookCoverUrl({
+      id: book.id,
+      cover_url: book.cover_url,
+      cover_r2_key: (book as any).cover_r2_key,
+      cover_url_expires_at: (book as any).cover_url_expires_at,
+    })
+
     return NextResponse.json({
       book: {
         id: book.id,
         title: book.title,
         author: book.author,
-        cover_url: book.cover_url,
+        cover_url: freshCoverUrl,
         type: book.type,
         created_at: book.created_at,
         note_count: noteCount,

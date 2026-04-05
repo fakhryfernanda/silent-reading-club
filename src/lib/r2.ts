@@ -44,6 +44,11 @@ export async function uploadToR2(key: string, file: Buffer, mimeType: string): P
   )
 }
 
+export function getPublicUrl(key: string): string {
+  const endpoint = process.env.R2_PUBLIC_ENDPOINT!.replace(/\/$/, '')
+  return `${endpoint}/${key}`
+}
+
 export async function deleteFromR2(key: string): Promise<void> {
   const client = getR2Client()
   await client.send(

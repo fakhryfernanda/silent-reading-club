@@ -12,6 +12,7 @@ Website + bot WhatsApp untuk komunitas baca. Tag bot di WhatsApp, notes bacaan k
 - 📄 **Pagination** — 6 buku per halaman (desktop) / 4 (mobile), navigasi client-side
 - 🎨 **Markdown support** — Format notes dengan markdown (bold, italic, list, dll)
 - 🖼️ **Attachment foto** — Upload foto ke catatan via admin panel, tampil di halaman detail buku
+- 📕 **Cover buku** — Upload cover buku via admin panel, tampil di homepage dan halaman detail
 
 ## Setup
 
@@ -33,6 +34,7 @@ Buat project di [Supabase](https://supabase.com):
    - `001_initial_setup.sql`
    - `002_seed_data.sql` (optional, untuk dev)
    - `003_attachments.sql`
+   - `004_book_cover_expiry.sql`
 
 Lihat `migrations/README.md` untuk detail lengkap.
 
@@ -80,6 +82,7 @@ Website buka di [http://localhost:3000](http://localhost:3000)
   - **Filter pembaca** — Lihat catatan dari pembaca tertentu
   - **Collapse/Expand** — Notes >300 karakter auto-truncate, tombol "Baca selengkapnya ▼" / "Tutup ▲"
   - **Attachment foto** — Foto yang diupload tampil di bawah konten catatan dengan aspect ratio asli
+  - **Cover buku** — Tampil di hero section halaman detail dan sebagai aksen di card homepage
 - **Admin Panel** — Buka `/admin?key=YOUR_SECRET` untuk CRUD data
   - Tab Buku: filter by tipe, pembaca, dan pencarian judul (live search)
   - Tab Catatan: filter by pembaca, buku, dan pencarian judul buku (live search)
@@ -122,6 +125,7 @@ Fitur:
 - 🗑️ Hapus data (cascade delete)
 - 📊 Lihat semua data sekaligus
 - 🖼️ **Upload foto** per catatan (multiple, langsung ke Cloudflare R2)
+- 📕 **Upload cover buku** — upload saat tambah/edit buku, cover lama otomatis dihapus dari R2
 - 🔍 **Filter**:
   - Tab Buku: by tipe, pembaca, dan pencarian judul (live search)
   - Tab Catatan: by pembaca, buku, dan pencarian judul buku (live search, dropdown alfabetis)
@@ -132,7 +136,7 @@ Fitur:
 - Tidak pakai Tailwind — inline styles + CSS variables
 - Markdown rendering dengan `react-markdown`
 - Database setup terpisah di folder `migrations/`
-- Foto attachment disimpan di Cloudflare R2 dengan signed URL (expiry 7 hari, auto-refresh)
+- Foto attachment dan cover buku disimpan di Cloudflare R2 dengan signed URL (expiry 7 hari, auto-refresh)
 
 Detail lengkap untuk AI agent ada di `CLAUDE.md`.
 
