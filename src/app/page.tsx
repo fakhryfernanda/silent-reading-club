@@ -14,6 +14,7 @@ type Stats = {
 type Member = {
   id: string
   display_name: string
+  alias: string | null
 }
 
 function HomePageContent() {
@@ -55,7 +56,8 @@ function HomePageContent() {
             if (!memberMap.has(reader.id)) {
               memberMap.set(reader.id, {
                 id: reader.id,
-                display_name: reader.display_name
+                display_name: reader.display_name,
+                alias: reader.alias || null
               })
             }
           })

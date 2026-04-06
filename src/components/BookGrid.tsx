@@ -135,10 +135,10 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter }: { ty
                       border: '2px solid var(--card-bg)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 11, fontWeight: 600, color: '#fff', lineHeight: 1,
-                      background: avatarColor(r.display_name),
+                      background: avatarColor((r as any).alias || r.display_name),
                       marginLeft: ri === 0 ? 0 : -6,
                     }}>
-                      {r.display_name ? initials(r.display_name) : '?'}
+                      {(r as any).alias ? initials((r as any).alias) : (r.display_name ? initials(r.display_name) : '?')}
                     </div>
                   ))}
                 </div>

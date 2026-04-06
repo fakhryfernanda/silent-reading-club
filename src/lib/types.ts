@@ -2,6 +2,7 @@ export type Member = {
   id: string
   wa_phone: string
   display_name: string
+  alias: string | null
   created_at: string
 }
 

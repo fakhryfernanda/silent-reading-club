@@ -7,6 +7,7 @@ Website + bot WhatsApp untuk komunitas baca. Tag bot di WhatsApp, notes bacaan k
 - 📝 **Simpan notes** — Tag bot di grup WA, catatan otomatis tersimpan
 - 📚 **Lihat bacaan** — Semua notes terkumpul per buku di website
 - 👥 **Multi-reader** — Lihat catatan dari berbagai pembaca untuk buku yang sama
+- 🎭 **Alias pembaca** — Tampilkan nama samaran (alias) di halaman publik, fallback ke nama asli kalau alias kosong
 - 📖 **Collapse notes** — Notes panjang auto-truncate, klik "Baca selengkapnya" untuk expand
 - 🔍 **Filter** — Filter buku by tipe (Fiksi, Nonfiksi, dll), by pembaca, dan pencarian judul (live search)
 - 📄 **Pagination** — 6 buku per halaman (desktop) / 4 (mobile), navigasi client-side
@@ -38,6 +39,7 @@ Buat project di [Supabase](https://supabase.com):
    - `002_seed_data.sql` (optional, untuk dev)
    - `003_attachments.sql`
    - `004_notes_sort_order_not_null.sql`
+   - `005_add_member_alias.sql` (tambah kolom `alias` dengan constraint UNIQUE)
 
 Lihat `migrations/README.md` untuk detail lengkap.
 
@@ -132,6 +134,7 @@ Fitur:
 - 📕 **Upload cover buku** — upload saat tambah/edit buku, cover lama otomatis dihapus dari R2
 - 📚 **Searchable book dropdown** — Pilih buku saat tambah catatan dengan search, filter "Lanjut baca" (buku yang sudah dibaca user) atau "Buku baru"
 - 🔢 **Urutan catatan** — Sort order required (default: auto-increment). Edit urutan auto-reorder catatan lain dalam buku yang sama (naik/turun/hapus)
+- 🎭 **Alias anggota** — Atur nama samaran (alias) unik per anggota, tampil di publik menggantikan nama asli
 - 🔍 **Filter**:
   - Tab Buku: by tipe, pembaca, dan pencarian judul (live search)
   - Tab Catatan: by pembaca, buku, dan pencarian judul buku (live search, dropdown alfabetis)

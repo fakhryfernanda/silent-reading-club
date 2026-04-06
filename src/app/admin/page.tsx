@@ -11,6 +11,7 @@ type AdminMember = {
   id: string
   wa_phone: string
   display_name: string
+  alias: string | null
   created_at: string
   note_count: number
 }
@@ -194,7 +195,7 @@ export default function AdminPage() {
       let body: Record<string, string | number | null> = {}
       let url = ''
       if (editTarget.type === 'members') {
-        body = { display_name: editValues.display_name, wa_phone: editValues.wa_phone }
+        body = { display_name: editValues.display_name, wa_phone: editValues.wa_phone, alias: editValues.alias || null }
         url = `/api/admin/members/${editTarget.id}`
       } else if (editTarget.type === 'books') {
         url = `/api/admin/books/${editTarget.id}`
@@ -348,7 +349,7 @@ export default function AdminPage() {
 
       if (addForm === 'member') {
         url = '/api/admin/members'
-        body = { wa_phone: addValues.wa_phone?.trim(), display_name: addValues.display_name?.trim() }
+        body = { wa_phone: addValues.wa_phone?.trim(), display_name: addValues.display_name?.trim(), alias: addValues.alias?.trim() || null }
       } else if (addForm === 'book') {
         url = '/api/admin/books'
         const form = new FormData()
@@ -625,6 +626,7 @@ export default function AdminPage() {
               <>
                 <FormField label="Nomor WA" value={addValues.wa_phone ?? ''} onChange={v => setAddValues(p => ({ ...p, wa_phone: v }))} placeholder="+628111..." />
                 <FormField label="Nama Tampil" value={addValues.display_name ?? ''} onChange={v => setAddValues(p => ({ ...p, display_name: v }))} placeholder="Nama anggota" />
+                <FormField label="Alias (opsional)" value={addValues.alias ?? ''} onChange={v => setAddValues(p => ({ ...p, alias: v }))} placeholder="Nama samaran untuk tampilan publik" />
               </>
             )}
             {addForm === 'book' && (
@@ -946,11 +948,11 @@ function MembersList({ members, editTarget, editValues, deleteTarget, saving, lo
           }}>
             <div style={{
               width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
-              background: avatarColor(m.display_name),
+              background: avatarColor(m.alias || m.display_name),
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontFamily: 'Lora, serif', fontSize: 15, color: '#fff', fontWeight: 600,
             }}>
-              {initials(m.display_name)}
+              {initials(m.alias || m.display_name)}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               {isEditing ? (
@@ -965,6 +967,13 @@ function MembersList({ members, editTarget, editValues, deleteTarget, saving, lo
                   />
                   <input
                     type="text"
+                    value={editValues.alias ?? ''}
+                    onChange={e => onEditChange({ ...editValues, alias: e.target.value })}
+                    style={{ ...inputStyle, fontSize: 14, marginBottom: 6 }}
+                    placeholder="Alias (opsional)"
+                  />
+                  <input
+                    type="text"
                     value={editValues.wa_phone ?? ''}
                     onChange={e => onEditChange({ ...editValues, wa_phone: e.target.value })}
                     style={{ ...inputStyle, fontSize: 14, marginBottom: 4 }}
@@ -972,9 +981,16 @@ function MembersList({ members, editTarget, editValues, deleteTarget, saving, lo
                   />
                 </>
               ) : (
-                <p style={{ margin: '0 0 2px', fontFamily: 'Lora, serif', fontSize: 16, color: 'var(--brown-dark)', fontWeight: 600 }}>
-                  {m.display_name}
-                </p>
+                <>
+                  <p style={{ margin: '0 0 2px', fontFamily: 'Lora, serif', fontSize: 16, color: 'var(--brown-dark)', fontWeight: 600 }}>
+                    {m.display_name}
+                  </p>
+                  {m.alias && (
+                    <p style={{ margin: '0 0 2px', fontFamily: 'Crimson Pro, serif', fontSize: 14, color: 'var(--amber)', fontStyle: 'italic' }}>
+                      {m.alias}
+                    </p>
+                  )}
+                </>
               )}
               {!isEditing && (
                 <p style={{ margin: '0 0 2px', fontFamily: 'Crimson Pro, serif', fontSize: 14, color: 'var(--text-muted)' }}>
@@ -990,7 +1006,7 @@ function MembersList({ members, editTarget, editValues, deleteTarget, saving, lo
               isDeleting={isDeleting}
               deleteLabel={`"${m.display_name}" + ${m.note_count} catatan`}
               saving={saving}
-              onEdit={() => onEdit(m.id, { display_name: m.display_name, wa_phone: m.wa_phone })}
+              onEdit={() => onEdit(m.id, { display_name: m.display_name, wa_phone: m.wa_phone, alias: m.alias ?? '' })}
               onDelete={() => onDelete(m.id, `"${m.display_name}"`)}
               onSaveEdit={onSaveEdit}
               onCancelEdit={onCancelEdit}

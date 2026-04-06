@@ -14,6 +14,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const body = await req.json()
   const display_name = body.display_name?.trim()
   const wa_phone = body.wa_phone?.trim()
+  const alias = body.alias?.trim() || null
 
   if (!display_name) {
     return NextResponse.json({ error: 'display_name wajib diisi' }, { status: 400 })
@@ -25,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   try {
     const { data, error } = await supabase
       .from('members')
-      .update({ display_name, wa_phone })
+      .update({ display_name, wa_phone, alias })
       .eq('id', params.id)
       .select()
       .single()
@@ -35,6 +36,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         return NextResponse.json({ error: 'Anggota tidak ditemukan' }, { status: 404 })
       }
       if (error.code === '23505') {
+        const detail = (error.message || '').toLowerCase()
+        if (detail.includes('alias') || detail.includes('idx_members_alias_unique')) {
+          return NextResponse.json({ error: 'Alias sudah dipakai anggota lain' }, { status: 409 })
+        }
         return NextResponse.json({ error: 'Nomor WA sudah dipakai anggota lain' }, { status: 409 })
       }
       throw error

@@ -32,7 +32,8 @@ export async function GET(
           member_id,
           member:members (
             display_name,
-            wa_phone
+            wa_phone,
+            alias
           )
         )
       `)
@@ -71,7 +72,8 @@ export async function GET(
         sort_order: note.sort_order,
         created_at: note.created_at,
         member_id: note.member_id,
-        display_name: note.member?.display_name,
+        display_name: note.member?.alias || note.member?.display_name,
+        alias: note.member?.alias,
         wa_phone: note.member?.wa_phone,
         attachments: attachmentsByNoteId[note.id] || []
       }))

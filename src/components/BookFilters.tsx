@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { avatarColor, initials } from '@/lib/utils'
 
 export type BookFilterProps = {
   types?: string[]
-  members?: { id: string; display_name: string }[]
+  members?: { id: string; display_name: string; alias?: string | null }[]
   selectedType: string | null
   selectedReader: string | null
   selectedTitle: string | null
@@ -16,6 +15,9 @@ export type BookFilterProps = {
 }
 
 const BOOK_TYPES = ['Nonfiksi', 'Fiksi', 'Komik', 'Artikel', 'Jurnal', 'Kitab Suci']
+
+const displayName = (m: { display_name: string; alias?: string | null }) =>
+  m.alias || m.display_name
 
 const chipStyle = (active: boolean): React.CSSProperties => ({
   fontFamily: 'Lora, serif',
@@ -130,20 +132,10 @@ export default function BookFilters({
               <option value="">Semua pembaca</option>
               {members.map(m => (
                 <option key={m.id} value={m.id}>
-                  {m.display_name}
+                  {displayName(m)}
                 </option>
               ))}
             </select>
-            {selectedReader && (
-              <div style={{
-                width: 30, height: 30, borderRadius: '50%',
-                background: avatarColor(members.find(m => m.id === selectedReader)?.display_name || ''),
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, fontWeight: 600, color: '#fff', lineHeight: 1,
-              }}>
-                {initials(members.find(m => m.id === selectedReader)?.display_name || '?')}
-              </div>
-            )}
           </div>
         )}
       </div>

@@ -43,6 +43,11 @@ export function initials(name: string): string {
     return firstLetter + secondLetter
   }
 
+  // Single word: if all uppercase, return as-is; otherwise first letter
+  const singleWord = words[0] || ''
+  if (singleWord === singleWord.toUpperCase()) {
+    return singleWord
+  }
   return first.toUpperCase()
 }
 

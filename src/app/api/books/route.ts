@@ -30,7 +30,8 @@ export async function GET(req: NextRequest) {
           created_at,
           members:member_id (
             id,
-            display_name
+            display_name,
+            alias
           )
         )
       `)
@@ -49,7 +50,8 @@ export async function GET(req: NextRequest) {
         if (member && !acc.find(r => r.id === member.id)) {
           acc.push({
             id: member.id,
-            display_name: member.display_name
+            display_name: member.display_name,
+            alias: member.alias
           })
         }
         return acc
@@ -73,7 +75,7 @@ export async function GET(req: NextRequest) {
         note_count: noteCount,
         reader_count: readers.length,
         latest_note: latestNote?.content || null,
-        latest_note_by: latestNote?.members?.display_name || null,
+        latest_note_by: latestNote?.members?.alias || latestNote?.members?.display_name || null,
         latest_note_at: latestNote?.created_at || null,
         readers: readers
       }
