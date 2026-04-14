@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Book } from '@/lib/types'
 import { timeAgo, avatarColor, initials, stripMarkdown } from '@/lib/utils'
@@ -10,8 +10,6 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter, isCove
   const [currentPage, setCurrentPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
-  const [cardMinHeight, setCardMinHeight] = useState<number | null>(null)
-  const gridRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768)
@@ -19,23 +17,6 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter, isCove
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
-
-  // Measure max card height after animation completes
-  useEffect(() => {
-    setCardMinHeight(null) // Reset first
-    const timer = setTimeout(() => {
-      if (!gridRef.current) return
-      const cards = gridRef.current.querySelectorAll(':scope > a > div')
-      if (cards.length === 0) return
-      let maxH = 0
-      cards.forEach(card => {
-        const h = (card as HTMLElement).offsetHeight
-        if (h > maxH) maxH = h
-      })
-      setCardMinHeight(maxH)
-    }, 500) // Wait for fadeUp animation (400ms) + buffer
-    return () => clearTimeout(timer)
-  }, [allBooks, currentPage, isCoverMode, isMobile])
 
   const limit = isMobile ? 4 : 6
 
@@ -103,9 +84,9 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter, isCove
 
   return (
     <div>
-      <div ref={gridRef} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 20, marginBottom: 60 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 20, marginBottom: 60 }}>
         {books.map((book, i) => (
-          <Link key={book.id} href={`/books/${book.id}`} style={{ textDecoration: 'none' }}>
+          <Link key={book.id} href={`/books/${book.id}`} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column' }}>
             <div
               key={isCoverMode ? 'cover' : 'info'}
               className="animate-fade-up"
@@ -119,7 +100,7 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter, isCove
                 overflow: 'hidden',
                 animationDelay: `${i * 0.07}s`,
                 transition: 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
-                minHeight: cardMinHeight || (isCoverMode ? 360 : 260),
+                height: '100%',
               }}
               onMouseEnter={e => {
                 if (!isCoverMode) {
@@ -179,54 +160,67 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter, isCove
               ) : (
                 /* Info mode (original layout) */
                 <>
+                  {/* Accent bar - full height */}
                   <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: 'linear-gradient(to bottom, var(--amber), var(--brown-light))', borderRadius: '10px 0 0 10px' }} />
 
-                  <div style={{ fontFamily: 'Lora, serif', fontSize: 17, fontWeight: 600, color: 'var(--brown-dark)', lineHeight: 1.3, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {book.title}
-                  </div>
-                  <div style={{ fontSize: 14, color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: 6 }}>
-                    {book.author || 'Penulis tidak diketahui'}
-                  </div>
-                  {book.type && (
-                    <span style={{ fontFamily: 'Lora, serif', fontSize: 10, color: 'var(--amber)', border: '1px solid var(--amber)', borderRadius: 999, padding: '2px 7px', whiteSpace: 'nowrap', display: 'inline-block', marginBottom: 16 }}>
-                      {book.type}
-                    </span>
-                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 260, paddingLeft: 0, justifyContent: 'space-between' }}>
+                    {/* TOP SECTION: Book Info */}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontFamily: 'Lora, serif', fontSize: 17, fontWeight: 600, color: 'var(--brown-dark)', lineHeight: 1.3, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {book.title}
+                      </div>
+                      <div style={{ fontSize: 14, color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: 6 }}>
+                        {book.author || 'Penulis tidak diketahui'}
+                      </div>
+                      {book.type && (
+                        <span style={{ fontFamily: 'Lora, serif', fontSize: 10, color: 'var(--amber)', border: '1px solid var(--amber)', borderRadius: 999, padding: '2px 7px', whiteSpace: 'nowrap', display: 'inline-block', marginBottom: 16 }}>
+                          {book.type}
+                        </span>
+                      )}
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                    <div style={{ display: 'flex' }}>
-                      {(book.readers || []).slice(0, 4).map((r, ri) => (
-                        <div key={r.id} style={{
-                          width: 30, height: 30, borderRadius: '50%',
-                          border: '2px solid var(--card-bg)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 11, fontWeight: 600, color: '#fff', lineHeight: 1,
-                          background: avatarColor((r as any).alias || r.display_name),
-                          marginLeft: ri === 0 ? 0 : -6,
-                        }}>
-                          {(r as any).alias ? initials((r as any).alias) : (r.display_name ? initials(r.display_name) : '?')}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8}}>
+                        <div style={{ display: 'flex' }}>
+                          {(book.readers || []).slice(0, 4).map((r, ri) => (
+                            <div key={r.id} style={{
+                              width: 30, height: 30, borderRadius: '50%',
+                              border: '2px solid var(--card-bg)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: 11, fontWeight: 600, color: '#fff', lineHeight: 1,
+                              background: avatarColor((r as any).alias || r.display_name),
+                              marginLeft: ri === 0 ? 0 : -6,
+                            }}>
+                              {(r as any).alias ? initials((r as any).alias) : (r.display_name ? initials(r.display_name) : '?')}
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                          {book.reader_count} pembaca · {book.note_count} catatan
+                        </span>
+                      </div>
                     </div>
-                    <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                      {book.reader_count} pembaca · {book.note_count} catatan
-                    </span>
-                  </div>
 
-                  {book.latest_note && (
-                    <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
-                      <div style={{
-                        fontSize: 14, color: 'var(--text-muted)', fontStyle: 'italic',
-                        lineHeight: 1.5, display: '-webkit-box',
-                        WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                      }}>
-                        "{stripMarkdown(book.latest_note)}"
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--amber)', marginTop: 6 }}>
-                        &mdash; {book.latest_note_by || 'Anonim'}{book.latest_note_at ? `, ${timeAgo(book.latest_note_at)}` : ''}
-                      </div>
+                    {/* BOTTOM SECTION: Note Excerpt (always shown) */}
+                    <div style={{ paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+                      {book.latest_note ? (
+                        <>
+                          <div style={{
+                            fontSize: 14, color: 'var(--text-muted)', fontStyle: 'italic',
+                            lineHeight: 1.5, display: '-webkit-box',
+                            WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                          }}>
+                            "{stripMarkdown(book.latest_note)}"
+                          </div>
+                          <div style={{ fontSize: 12, color: 'var(--amber)', marginTop: 6 }}>
+                            &mdash; {book.latest_note_by || 'Anonim'}{book.latest_note_at ? `, ${timeAgo(book.latest_note_at)}` : ''}
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)', fontStyle: 'italic', lineHeight: 1.5 }}>
+                          Belum ada catatan dari buku ini
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </>
               )}
             </div>
