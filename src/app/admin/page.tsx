@@ -701,8 +701,8 @@ export default function AdminPage() {
                     value={addValues.content ?? ''}
                     onChange={e => setAddValues(p => ({ ...p, content: e.target.value }))}
                     placeholder="Tulis catatan..."
-                    rows={3}
-                    style={{ ...inputStyle, resize: 'vertical', fontFamily: 'Crimson Pro, serif', fontSize: 15 }}
+                    rows={6}
+                    style={{ ...inputStyle, resize: 'vertical', fontFamily: 'Crimson Pro, serif', fontSize: 15, width: '100%' }}
                   />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
