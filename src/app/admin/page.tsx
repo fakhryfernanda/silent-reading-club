@@ -54,44 +54,20 @@ type EditTarget = { type: Tab; id: string } | null
 type DeleteTarget = { type: Tab; id: string; label: string } | null
 type AddForm = 'member' | 'book' | 'note' | null
 
-const inputStyle: React.CSSProperties = {
-  fontFamily: 'Crimson Pro, serif',
-  fontSize: 15,
-  color: 'var(--brown-dark)',
-  background: 'transparent',
-  border: 'none',
-  outline: 'none',
-  padding: '4px 0',
-}
-
-const btnBase: React.CSSProperties = {
-  fontFamily: 'Lora, serif',
-  fontSize: 13,
-  borderRadius: 999,
-  border: 'none',
-  cursor: 'pointer',
-  padding: '4px 12px',
-  transition: 'all 0.15s',
-}
-
 export default function AdminPage() {
-  const [data, setData] = useState<AdminData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [unauthorized, setUnauthorized] = useState(false)
-  const [totalCounters, setTotalCounters] = useState<{ books: number; members: number; notes: number }>({
-    books: 0,
-    members: 0,
-    notes: 0,
-  })
-  const [allBookTypes, setAllBookTypes] = useState<string[]>([])
-  const [initialLoadDone, setInitialLoadDone] = useState(false)
   const [tab, setTab] = useState<Tab>('books')
+  const [data, setData] = useState<AdminData | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [unauthorized, setUnauthorized] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [editTarget, setEditTarget] = useState<EditTarget>(null)
-  const [editValues, setEditValues] = useState<Record<string, string>>({})
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null)
+  const [editValues, setEditValues] = useState<Record<string, string>>({})
   const [addForm, setAddForm] = useState<AddForm>(null)
   const [addValues, setAddValues] = useState<Record<string, string>>({})
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [totalCounters, setTotalCounters] = useState({ books: 0, members: 0, notes: 0 })
+  const [initialLoadDone, setInitialLoadDone] = useState(false)
+  const [allBookTypes, setAllBookTypes] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [notePreview, setNotePreview] = useState(false)
   const [uploadingNoteId, setUploadingNoteId] = useState<string | null>(null)
@@ -492,9 +468,9 @@ export default function AdminPage() {
   // ── RENDER ────────────────────────────────────────────
   if (unauthorized) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 12 }}>
-        <p style={{ fontFamily: 'Lora, serif', fontSize: 20, color: 'var(--brown-dark)' }}>Akses Ditolak</p>
-        <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 16, color: 'var(--text-muted)' }}>
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-3">
+        <p className="font-lora text-[20px] text-brown-dark">Akses Ditolak</p>
+        <p className="font-crimson text-[16px] text-muted">
           Pastikan URL mengandung <code>?key=...</code> yang benar.
         </p>
       </div>
@@ -503,8 +479,8 @@ export default function AdminPage() {
 
   if (!data) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-        <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+      <div className="flex items-center justify-center h-[60vh]">
+        <p className="font-crimson text-[18px] text-muted italic">
           Memuat data admin...
         </p>
       </div>
@@ -515,20 +491,20 @@ export default function AdminPage() {
   const addFormType: AddForm = tab === 'members' ? 'member' : tab === 'books' ? 'book' : 'note'
 
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto', padding: '40px 28px 80px' }}>
+    <div className="max-w-[860px] mx-auto px-7 py-10 pb-20">
       {/* Header */}
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontFamily: 'Lora, serif', fontSize: 26, color: 'var(--brown-dark)', margin: 0 }}>
+      <div className="mb-8">
+        <h1 className="font-lora text-[26px] text-brown-dark m-0">
           Admin — Silent Reading Club
         </h1>
-        <div style={{ display: 'flex', gap: 20, marginTop: 12 }}>
+        <div className="flex gap-5 mt-3">
           {[
             { label: 'Buku', count: totalCounters.books },
             { label: 'Pembaca', count: totalCounters.members },
             { label: 'Catatan', count: totalCounters.notes },
           ].map(s => (
-            <span key={s.label} style={{ fontFamily: 'Crimson Pro, serif', fontSize: 15, color: 'var(--text-muted)' }}>
-              <strong style={{ color: 'var(--amber)' }}>{s.count}</strong> {s.label}
+            <span key={s.label} className="font-crimson text-[15px] text-muted">
+              <strong className="text-accent">{s.count}</strong> {s.label}
             </span>
           ))}
         </div>
@@ -536,23 +512,14 @@ export default function AdminPage() {
 
       {/* Error banner */}
       {errorMessage && (
-        <div style={{
-          background: 'rgba(212,130,74,0.12)',
-          border: '1px solid var(--amber)',
-          borderRadius: 8,
-          padding: '10px 16px',
-          marginBottom: 20,
-          fontFamily: 'Crimson Pro, serif',
-          fontSize: 15,
-          color: 'var(--brown-dark)',
-        }}>
+        <div className="bg-[rgba(212,130,74,0.12)] border border-accent rounded-[8px] p-[10px_16px] mb-5 font-crimson text-[15px] text-brown-dark">
           {errorMessage}
         </div>
       )}
 
       {/* Tab bar + Add button */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-        <div style={{ display: 'flex', gap: 8 }}>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex gap-2">
           {(['books', 'members', 'notes'] as Tab[]).map(t => (
             <button
               key={t}
@@ -577,14 +544,11 @@ export default function AdminPage() {
                   setNoteBookFilter(null)
                 }
               }}
-              style={{
-                ...btnBase,
-                padding: '6px 18px',
-                fontSize: 14,
-                background: tab === t ? 'var(--amber)' : 'var(--card-bg)',
-                color: tab === t ? '#fff' : 'var(--text-muted)',
-                border: tab === t ? 'none' : '1px solid var(--border)',
-              }}
+              className={`font-lora text-[13px] rounded-full cursor-pointer px-[18px] py-1.5 text-[14px] transition-all duration-150 ${
+                tab === t
+                  ? 'bg-accent text-white border-none'
+                  : 'bg-cardBg text-muted border border-bookBorder'
+              }`}
             >
               {t === 'members' ? 'Anggota' : t === 'books' ? 'Buku' : 'Catatan'}
             </button>
@@ -592,14 +556,11 @@ export default function AdminPage() {
         </div>
         <button
           onClick={() => addForm === addFormType ? cancelAdd() : openAddForm(addFormType)}
-          style={{
-            ...btnBase,
-            padding: '6px 16px',
-            fontSize: 14,
-            background: addForm === addFormType ? 'var(--card-bg)' : 'var(--brown-dark)',
-            color: addForm === addFormType ? 'var(--text-muted)' : '#fff',
-            border: addForm === addFormType ? '1px solid var(--border)' : 'none',
-          }}
+          className={`font-lora text-[13px] rounded-full cursor-pointer px-4 py-1.5 text-[14px] transition-all duration-150 ${
+            addForm === addFormType
+              ? 'bg-cardBg text-muted border border-bookBorder'
+              : 'bg-brown-dark text-white border-none'
+          }`}
         >
           {addForm === addFormType ? 'Batal Tambah' : `+ Tambah ${addLabel}`}
         </button>
@@ -607,18 +568,11 @@ export default function AdminPage() {
 
       {/* Add Form */}
       {addForm && (
-        <div style={{
-          background: 'var(--card-bg)',
-          border: '1px solid var(--border)',
-          borderRadius: 10,
-          padding: '20px 24px',
-          marginBottom: 20,
-          borderLeft: '4px solid var(--amber)',
-        }}>
-          <p style={{ fontFamily: 'Lora, serif', fontSize: 14, color: 'var(--brown-mid)', margin: '0 0 16px' }}>
+        <div className="bg-cardBg border border-bookBorder rounded-[10px] p-[20px_24px] mb-5 border-l-4 border-l-accent">
+          <p className="font-lora text-[14px] text-brown-mid m-0 mb-4">
             Tambah {addLabel} Baru
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="flex flex-col gap-3.5">
             {addForm === 'member' && (
               <>
                 <FormField label="Nomor WA" value={addValues.wa_phone ?? ''} onChange={v => setAddValues(p => ({ ...p, wa_phone: v }))} placeholder="+628111..." />
@@ -631,18 +585,18 @@ export default function AdminPage() {
                 <FormField label="Judul" value={addValues.title ?? ''} onChange={v => setAddValues(p => ({ ...p, title: v }))} placeholder="Judul buku / artikel / komik..." />
                 <FormField label="Penulis (opsional)" value={addValues.author ?? ''} onChange={v => setAddValues(p => ({ ...p, author: v }))} placeholder="Nama penulis" />
                 <div>
-                  <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Tipe (opsional)</label>
+                  <label className="font-lora text-[12px] text-muted block mb-1">Tipe (opsional)</label>
                   <select
                     value={addValues.type ?? ''}
                     onChange={e => setAddValues(p => ({ ...p, type: e.target.value }))}
-                    style={{ ...inputStyle, width: 'auto', minWidth: 160 }}
+                    className="font-crimson text-[15px] text-brown-dark bg-transparent border-none border-b border-brown-light outline-none py-0.5 w-auto min-w-[160px]"
                   >
                     <option value="">— pilih tipe —</option>
                     {allBookTypes.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Cover (opsional)</label>
+                  <label className="font-lora text-[12px] text-muted block mb-1">Cover (opsional)</label>
                   <input
                     type="file"
                     accept="image/*"
@@ -650,7 +604,7 @@ export default function AdminPage() {
                       addCoverRef.current = e.target.files?.[0] ?? null
                       setAddValues(p => ({ ...p, _coverName: e.target.files?.[0]?.name ?? '' }))
                     }}
-                    style={{ fontFamily: 'Crimson Pro, serif', fontSize: 14, color: 'var(--brown-dark)' }}
+                    className="font-crimson text-[14px] text-brown-dark"
                   />
                 </div>
               </>
@@ -658,11 +612,11 @@ export default function AdminPage() {
             {addForm === 'note' && (
               <>
                 <div>
-                  <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Anggota</label>
+                  <label className="font-lora text-[12px] text-muted block mb-1">Anggota</label>
                   <select
                     value={addValues.member_id ?? ''}
                     onChange={e => setAddValues(p => ({ ...p, member_id: e.target.value }))}
-                    style={{ ...inputStyle, width: 'auto', minWidth: 200 }}
+                    className="font-crimson text-[15px] text-brown-dark bg-transparent border-none border-b border-brown-light outline-none py-0.5 w-auto min-w-[200px]"
                   >
                     <option value="">Pilih anggota...</option>
                     {data.members.map(m => (
@@ -671,7 +625,7 @@ export default function AdminPage() {
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Buku</label>
+                  <label className="font-lora text-[12px] text-muted block mb-1">Buku</label>
                   <SearchableBookSelect
                     books={data.books.map(b => ({ id: b.id, title: b.title }))}
                     value={addValues.book_id ?? ''}
@@ -693,31 +647,31 @@ export default function AdminPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Catatan</label>
+                  <label className="font-lora text-[12px] text-muted block mb-1">Catatan</label>
                   <textarea
                     value={addValues.content ?? ''}
                     onChange={e => setAddValues(p => ({ ...p, content: e.target.value }))}
                     placeholder="Tulis catatan..."
                     rows={6}
-                    style={{ ...inputStyle, resize: 'vertical', fontFamily: 'Crimson Pro, serif', fontSize: 15, width: '100%' }}
+                    className="font-crimson text-[15px] text-brown-dark bg-transparent border-none border-b border-brown-light outline-none py-0.5 w-full resize-y"
                   />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Urutan #</label>
+                <div className="flex items-center gap-2">
+                  <label className="font-lora text-[12px] text-muted whitespace-nowrap">Urutan #</label>
                   <input
                     type="number"
                     min={1}
                     value={addValues.sort_order ?? ''}
                     onChange={e => setAddValues(p => ({ ...p, sort_order: e.target.value }))}
                     placeholder="Auto"
-                    style={{ ...inputStyle, width: 80, textAlign: 'center' }}
+                    className="font-crimson text-[15px] text-brown-dark bg-transparent border-none border-b border-brown-light outline-none py-0.5 w-20 text-center"
                   />
-                  <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 12, color: 'var(--text-muted)' }}>
+                  <span className="font-crimson text-[12px] text-muted">
                     (kosongkan untuk otomatis)
                   </span>
                 </div>
                 <div>
-                  <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Foto (opsional)</label>
+                  <label className="font-lora text-[12px] text-muted block mb-1">Foto (opsional)</label>
                   <input
                     type="file"
                     accept="image/*"
@@ -726,10 +680,10 @@ export default function AdminPage() {
                       addFilesRef.current = e.target.files
                       setAddValues(p => ({ ...p, _fileCount: String(e.target.files?.length ?? 0) }))
                     }}
-                    style={{ fontFamily: 'Crimson Pro, serif', fontSize: 14, color: 'var(--brown-dark)' }}
+                    className="font-crimson text-[14px] text-brown-dark"
                   />
                   {addValues._fileCount && Number(addValues._fileCount) > 0 && (
-                    <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 13, color: 'var(--text-muted)', marginLeft: 8 }}>
+                    <span className="font-crimson text-[13px] text-muted ml-2">
                       {addValues._fileCount} foto dipilih
                     </span>
                   )}
@@ -737,11 +691,18 @@ export default function AdminPage() {
               </>
             )}
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-            <button onClick={submitAdd} disabled={saving} style={{ ...btnBase, background: 'var(--amber)', color: '#fff', opacity: saving ? 0.6 : 1 }}>
+          <div className="flex gap-2 mt-4">
+            <button 
+              onClick={submitAdd} 
+              disabled={saving} 
+              className={`font-lora text-[13px] rounded-full border-none cursor-pointer px-3 py-1 transition-all duration-150 bg-accent text-white hover:bg-brown-mid ${saving ? 'opacity-60' : ''}`}
+            >
               Simpan
             </button>
-            <button onClick={cancelAdd} style={{ ...btnBase, background: 'var(--card-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+            <button 
+              onClick={cancelAdd} 
+              className="font-lora text-[13px] rounded-full cursor-pointer px-3 py-1 transition-all duration-150 border border-accent text-accent bg-transparent hover:bg-accent hover:text-white"
+            >
               Batal
             </button>
           </div>
@@ -847,7 +808,7 @@ function FormField({ label, value, onChange, placeholder }: {
 }) {
   return (
     <div>
-      <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>
+      <label className="font-lora text-[12px] text-muted block mb-1">
         {label}
       </label>
       <input
@@ -855,7 +816,7 @@ function FormField({ label, value, onChange, placeholder }: {
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        style={inputStyle}
+        className="font-crimson text-[15px] text-brown-dark bg-transparent border-none border-b border-brown-light outline-none py-0.5 w-full"
       />
     </div>
   )
@@ -876,25 +837,57 @@ function ActionButtons({ isEditing, isDeleting, deleteLabel, saving, onEdit, onD
 }) {
   if (isEditing) {
     return (
-      <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-        <button onClick={onSaveEdit} disabled={saving} style={{ ...btnBase, background: 'var(--amber)', color: '#fff', opacity: saving ? 0.6 : 1 }}>Simpan</button>
-        <button onClick={onCancelEdit} style={{ ...btnBase, background: 'var(--card-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Batal</button>
+      <div className="flex gap-1.5 shrink-0">
+        <button 
+          onClick={onSaveEdit} 
+          disabled={saving} 
+          className={`font-lora text-[13px] rounded-full border-none cursor-pointer px-3 py-1 transition-all duration-150 bg-accent text-white hover:bg-brown-mid ${saving ? 'opacity-60' : ''}`}
+        >
+          Simpan
+        </button>
+        <button 
+          onClick={onCancelEdit} 
+          className="font-lora text-[13px] rounded-full cursor-pointer px-3 py-1 transition-all duration-150 border border-accent text-accent bg-transparent hover:bg-accent hover:text-white"
+        >
+          Batal
+        </button>
       </div>
     )
   }
   if (isDeleting) {
     return (
-      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
-        <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 13, color: 'var(--brown-mid)' }}>Hapus {deleteLabel}?</span>
-        <button onClick={onConfirmDelete} disabled={saving} style={{ ...btnBase, background: 'var(--amber)', color: '#fff', opacity: saving ? 0.6 : 1 }}>Ya, Hapus</button>
-        <button onClick={onCancelDelete} style={{ ...btnBase, background: 'var(--card-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Batal</button>
+      <div className="flex gap-1.5 items-center shrink-0">
+        <span className="font-crimson text-[13px] text-brown-mid">Hapus {deleteLabel}?</span>
+        <button 
+          onClick={onConfirmDelete} 
+          disabled={saving} 
+          className={`font-lora text-[13px] rounded-full border-none cursor-pointer px-3 py-1 transition-all duration-150 bg-accent text-white hover:bg-brown-mid ${saving ? 'opacity-60' : ''}`}
+        >
+          Ya, Hapus
+        </button>
+        <button 
+          onClick={onCancelDelete} 
+          className="font-lora text-[13px] rounded-full cursor-pointer px-3 py-1 transition-all duration-150 border border-accent text-accent bg-transparent hover:bg-accent hover:text-white"
+        >
+          Batal
+        </button>
       </div>
     )
   }
   return (
-    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-      <button onClick={onEdit} style={{ ...btnBase, background: 'var(--card-bg)', color: 'var(--brown-mid)', border: '1px solid var(--border)' }}>Edit</button>
-      <button onClick={onDelete} style={{ ...btnBase, background: 'var(--card-bg)', color: 'var(--brown-mid)', border: '1px solid var(--border)' }}>Hapus</button>
+    <div className="flex gap-1.5 shrink-0">
+      <button 
+        onClick={onEdit} 
+        className="font-lora text-[13px] rounded-full cursor-pointer px-3 py-1 transition-all duration-150 bg-cardBg text-brown-mid border border-bookBorder hover:bg-brown-light hover:text-white"
+      >
+        Edit
+      </button>
+      <button 
+        onClick={onDelete} 
+        className="font-lora text-[13px] rounded-full cursor-pointer px-3 py-1 transition-all duration-150 bg-cardBg text-brown-mid border border-bookBorder hover:bg-danger hover:text-white"
+      >
+        Hapus
+      </button>
     </div>
   )
 }
@@ -920,45 +913,34 @@ function MembersList({ members, editTarget, editValues, deleteTarget, saving, lo
   }
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '20px 0' }}>
-        <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+      <div className="text-center py-5">
+        <p className="font-crimson text-[18px] text-muted italic">
           Memuat data...
         </p>
       </div>
     )
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div className="flex flex-col gap-3">
       {members.map(m => {
         const isEditing = editTarget?.type === 'members' && editTarget.id === m.id
         const isDeleting = deleteTarget?.type === 'members' && deleteTarget.id === m.id
         return (
-          <div key={m.id} style={{
-            background: 'var(--card-bg)',
-            border: '1px solid var(--border)',
-            borderRadius: 10,
-            padding: '16px 20px',
-            borderLeft: '4px solid var(--amber)',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: 14,
-          }}>
-            <div style={{
-              width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
-              background: avatarColor(m.alias || m.display_name),
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'Lora, serif', fontSize: 15, color: '#fff', fontWeight: 600,
-            }}>
+          <div key={m.id} className="bg-cardBg border border-bookBorder rounded-[10px] p-[16px_20px] border-l-4 border-l-accent flex items-start gap-3.5">
+            <div 
+              className="w-[42px] h-[42px] rounded-full shrink-0 flex items-center justify-center font-lora text-[15px] text-white font-semibold leading-[1]"
+              style={{ background: avatarColor(m.alias || m.display_name) }}
+            >
               {initials(m.alias || m.display_name)}
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="flex-1 min-w-0">
               {isEditing ? (
                 <>
                   <input
                     type="text"
                     value={editValues.display_name ?? ''}
                     onChange={e => onEditChange({ ...editValues, display_name: e.target.value })}
-                    style={{ ...inputStyle, fontSize: 16, fontWeight: 600, marginBottom: 6 }}
+                    className="font-crimson text-[16px] text-brown-dark bg-transparent border-none border-b border-brown-light outline-none py-0.5 w-full font-semibold mb-1.5"
                     autoFocus
                     placeholder="Nama tampil"
                   />
@@ -966,35 +948,35 @@ function MembersList({ members, editTarget, editValues, deleteTarget, saving, lo
                     type="text"
                     value={editValues.alias ?? ''}
                     onChange={e => onEditChange({ ...editValues, alias: e.target.value })}
-                    style={{ ...inputStyle, fontSize: 14, marginBottom: 6 }}
+                    className="font-crimson text-[14px] text-brown-dark bg-transparent border-none border-b border-brown-light outline-none py-0.5 w-full mb-1.5"
                     placeholder="Alias (opsional)"
                   />
                   <input
                     type="text"
                     value={editValues.wa_phone ?? ''}
                     onChange={e => onEditChange({ ...editValues, wa_phone: e.target.value })}
-                    style={{ ...inputStyle, fontSize: 14, marginBottom: 4 }}
+                    className="font-crimson text-[14px] text-brown-dark bg-transparent border-none border-b border-brown-light outline-none py-0.5 w-full mb-1"
                     placeholder="Nomor WA, cth: +628111..."
                   />
                 </>
               ) : (
                 <>
-                  <p style={{ margin: '0 0 2px', fontFamily: 'Lora, serif', fontSize: 16, color: 'var(--brown-dark)', fontWeight: 600 }}>
+                  <p className="m-0 mb-0.5 font-lora text-[16px] text-brown-dark font-semibold">
                     {m.display_name}
                   </p>
                   {m.alias && (
-                    <p style={{ margin: '0 0 2px', fontFamily: 'Crimson Pro, serif', fontSize: 14, color: 'var(--amber)', fontStyle: 'italic' }}>
+                    <p className="m-0 mb-0.5 font-crimson text-[14px] text-accent italic">
                       {m.alias}
                     </p>
                   )}
                 </>
               )}
               {!isEditing && (
-                <p style={{ margin: '0 0 2px', fontFamily: 'Crimson Pro, serif', fontSize: 14, color: 'var(--text-muted)' }}>
+                <p className="m-0 mb-0.5 font-crimson text-[14px] text-muted">
                   {m.wa_phone}
                 </p>
               )}
-              <p style={{ margin: 0, fontFamily: 'Crimson Pro, serif', fontSize: 13, color: 'var(--text-muted)' }}>
+              <p className="m-0 font-crimson text-[13px] text-muted">
                 {m.note_count} catatan · bergabung {timeAgo(m.created_at)}
               </p>
             </div>
@@ -1041,55 +1023,41 @@ function BooksList({ books, allBookTypes, editTarget, editValues, deleteTarget, 
   }
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '20px 0' }}>
-        <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+      <div className="text-center py-5">
+        <p className="font-crimson text-[18px] text-muted italic">
           Memuat data...
         </p>
       </div>
     )
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div className="flex flex-col gap-3">
       {books.map(b => {
         const isEditing = editTarget?.type === 'books' && editTarget.id === b.id
         const isDeleting = deleteTarget?.type === 'books' && deleteTarget.id === b.id
         return (
-          <div key={b.id} style={{
-            background: 'var(--card-bg)',
-            border: '1px solid var(--border)',
-            borderRadius: 10,
-            padding: '16px 20px',
-            borderLeft: '4px solid var(--brown-light)',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: 14,
-          }}>
-            <div style={{ width: 38, flexShrink: 0 }}>
+          <div key={b.id} className="bg-cardBg border border-bookBorder rounded-[10px] p-[16px_20px] border-l-4 border-l-brown-light flex items-start gap-3.5">
+            <div className="w-[38px] shrink-0">
               {b.cover_url ? (
                 <img
                   src={b.cover_url}
                   alt={b.title}
-                  style={{ width: 38, height: 'auto', borderRadius: 4, display: 'block', objectFit: 'cover' }}
+                  className="w-[38px] h-auto rounded block object-cover"
                 />
               ) : (
-                <div style={{
-                  width: 38, height: 38, borderRadius: 6,
-                  background: 'var(--brown-mid)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: 'Lora, serif', fontSize: 16, color: '#fff',
-                }}>
+                <div className="w-[38px] h-[38px] rounded-md bg-brown-mid flex items-center justify-center font-lora text-[16px] text-white">
                   📖
                 </div>
               )}
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="flex-1 min-w-0">
               {isEditing ? (
                 <>
                   <input
                     type="text"
                     value={editValues.title ?? ''}
                     onChange={e => onEditChange({ ...editValues, title: e.target.value })}
-                    style={{ ...inputStyle, fontSize: 16, fontWeight: 600, marginBottom: 6 }}
+                    className="font-crimson text-[16px] text-brown-dark bg-transparent border-none border-b border-brown-light outline-none py-0.5 w-full font-semibold mb-1.5"
                     autoFocus
                     placeholder="Judul"
                   />
@@ -1097,47 +1065,47 @@ function BooksList({ books, allBookTypes, editTarget, editValues, deleteTarget, 
                     type="text"
                     value={editValues.author ?? ''}
                     onChange={e => onEditChange({ ...editValues, author: e.target.value })}
-                    style={{ ...inputStyle, fontSize: 14, marginBottom: 6 }}
+                    className="font-crimson text-[14px] text-brown-dark bg-transparent border-none border-b border-brown-light outline-none py-0.5 w-full mb-1.5"
                     placeholder="Penulis (opsional)"
                   />
                   <select
                     value={editValues.type ?? ''}
                     onChange={e => onEditChange({ ...editValues, type: e.target.value })}
-                    style={{ ...inputStyle, width: 'auto', minWidth: 140, fontSize: 13 }}
+                    className="font-crimson text-[13px] text-brown-dark bg-transparent border-none border-b border-brown-light outline-none py-0.5 w-auto min-w-[140px]"
                   >
                     <option value="">— tipe —</option>
                     {allBookTypes.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
-                  <div style={{ marginTop: 6 }}>
-                    <label style={{ fontFamily: 'Lora, serif', fontSize: 11, color: 'var(--text-muted)', display: 'block', marginBottom: 3 }}>
+                  <div className="mt-1.5">
+                    <label className="font-lora text-[11px] text-muted block mb-0.5">
                       {b.cover_url ? 'Ganti cover' : 'Upload cover'} (opsional)
                     </label>
                     <input
                       type="file"
                       accept="image/*"
                       onChange={e => { editCoverRef.current = e.target.files?.[0] ?? null }}
-                      style={{ fontFamily: 'Crimson Pro, serif', fontSize: 13, color: 'var(--brown-dark)' }}
+                      className="font-crimson text-[13px] text-brown-dark"
                     />
                   </div>
                 </>
               ) : (
                 <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                    <p style={{ margin: 0, fontFamily: 'Lora, serif', fontSize: 16, color: 'var(--brown-dark)', fontWeight: 600 }}>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="m-0 font-lora text-[16px] text-brown-dark font-semibold">
                       {b.title}
                     </p>
                     {b.type && (
-                      <span style={{ fontFamily: 'Lora, serif', fontSize: 11, color: 'var(--amber)', border: '1px solid var(--amber)', borderRadius: 999, padding: '1px 8px' }}>
+                      <span className="font-lora text-[11px] text-accent border border-accent rounded-full px-2 py-0.5">
                         {b.type}
                       </span>
                     )}
                   </div>
-                  <p style={{ margin: '0 0 2px', fontFamily: 'Crimson Pro, serif', fontSize: 14, color: 'var(--text-muted)', fontStyle: b.author ? 'normal' : 'italic' }}>
+                  <p className={`m-0 mb-0.5 font-crimson text-[14px] text-muted ${!b.author && 'italic'}`}>
                     {b.author ?? 'Penulis tidak diketahui'}
                   </p>
                 </>
               )}
-              <p style={{ margin: 0, fontFamily: 'Crimson Pro, serif', fontSize: 13, color: 'var(--text-muted)' }}>
+              <p className="m-0 font-crimson text-[13px] text-muted">
                 {b.note_count} catatan · ditambahkan {timeAgo(b.created_at)}
               </p>
             </div>
@@ -1190,48 +1158,40 @@ function NotesList({ notes, editTarget, editValues, deleteTarget, saving, loadin
   }
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '20px 0' }}>
-        <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+      <div className="text-center py-5">
+        <p className="font-crimson text-[18px] text-muted italic">
           Memuat data...
         </p>
       </div>
     )
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div className="flex flex-col gap-3">
       {notes.map(n => {
         const isEditing = editTarget?.type === 'notes' && editTarget.id === n.id
         const isDeleting = deleteTarget?.type === 'notes' && deleteTarget.id === n.id
         return (
-          <div key={n.id} style={{
-            background: 'var(--card-bg)',
-            border: '1px solid var(--border)',
-            borderRadius: 10,
-            padding: '16px 20px',
-            borderLeft: '4px solid var(--brown-light)',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{
-                  width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-                  background: avatarColor(n.member_name),
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: 'Lora, serif', fontSize: 12, color: '#fff', fontWeight: 600,
-                }}>
+          <div key={n.id} className="bg-cardBg border border-bookBorder rounded-[10px] p-[16px_20px] border-l-4 border-l-brown-light">
+            <div className="flex justify-between items-start gap-3 mb-2.5">
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center font-lora text-[12px] text-white font-semibold leading-[1]"
+                  style={{ background: avatarColor(n.member_name) }}
+                >
                   {initials(n.member_name)}
                 </div>
-                <span style={{ fontFamily: 'Lora, serif', fontSize: 14, color: 'var(--brown-dark)' }}>
+                <span className="font-lora text-[14px] text-brown-dark">
                   {n.member_name}
                 </span>
-                <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>→</span>
-                <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 14, color: 'var(--brown-mid)', fontStyle: 'italic' }}>
+                <span className="text-muted text-[13px]">→</span>
+                <span className="font-crimson text-[14px] text-brown-mid italic">
                   {n.book_title}
                 </span>
-                <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 13, color: 'var(--text-muted)' }}>
+                <span className="font-crimson text-[13px] text-muted">
                   · {timeAgo(n.created_at)}
                 </span>
                 {!isEditing && (
-                  <span style={{ fontFamily: 'Lora, serif', fontSize: 11, color: 'var(--brown-light)', border: '1px solid var(--border)', borderRadius: 999, padding: '1px 7px', marginLeft: 4 }}>
+                  <span className="font-lora text-[11px] text-brown-light border border-bookBorder rounded-full px-[7px] py-0.5 ml-1">
                     #{n.sort_order}
                   </span>
                 )}
@@ -1251,30 +1211,42 @@ function NotesList({ notes, editTarget, editValues, deleteTarget, saving, loadin
             </div>
             {isEditing ? (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                  <div style={{ display: 'flex', gap: 6 }}>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="flex gap-1.5">
                     <button
                       onClick={() => { if (notePreview) onTogglePreview() }}
-                      style={{ ...btnBase, fontSize: 12, padding: '3px 10px', background: !notePreview ? 'var(--brown-dark)' : 'var(--card-bg)', color: !notePreview ? '#fff' : 'var(--text-muted)', border: notePreview ? '1px solid var(--border)' : 'none' }}
-                    >Edit</button>
+                      className={`font-lora text-[12px] rounded-full cursor-pointer px-2.5 py-0.5 transition-all duration-150 ${
+                        !notePreview 
+                          ? 'bg-brown-dark text-white border-none' 
+                          : 'bg-cardBg text-muted border border-bookBorder'
+                      }`}
+                    >
+                      Edit
+                    </button>
                     <button
                       onClick={() => { if (!notePreview) onTogglePreview() }}
-                      style={{ ...btnBase, fontSize: 12, padding: '3px 10px', background: notePreview ? 'var(--brown-dark)' : 'var(--card-bg)', color: notePreview ? '#fff' : 'var(--text-muted)', border: !notePreview ? '1px solid var(--border)' : 'none' }}
-                    >Preview</button>
+                      className={`font-lora text-[12px] rounded-full cursor-pointer px-2.5 py-0.5 transition-all duration-150 ${
+                        notePreview 
+                          ? 'bg-brown-dark text-white border-none' 
+                          : 'bg-cardBg text-muted border border-bookBorder'
+                      }`}
+                    >
+                      Preview
+                    </button>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <label style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Urutan #</label>
+                  <div className="flex items-center gap-1.5">
+                    <label className="font-lora text-[12px] text-muted whitespace-nowrap">Urutan #</label>
                     <input
                       type="number"
                       min={1}
                       value={editValues.sort_order ?? ''}
                       onChange={e => onEditChange({ ...editValues, sort_order: e.target.value })}
-                      style={{ ...inputStyle, width: 52, textAlign: 'center' }}
+                      className="font-crimson text-[15px] text-brown-dark bg-transparent border-none border-b border-brown-light outline-none py-0.5 w-[52px] text-center"
                     />
                   </div>
                 </div>
                 {notePreview ? (
-                  <div className="note-content" style={{ minHeight: 80, padding: '8px 0' }}>
+                  <div className="note-content min-h-[80px] py-2">
                     <ReactMarkdown>{editValues.content ?? ''}</ReactMarkdown>
                   </div>
                 ) : (
@@ -1282,65 +1254,48 @@ function NotesList({ notes, editTarget, editValues, deleteTarget, saving, loadin
                     value={editValues.content ?? ''}
                     onChange={e => onEditChange({ ...editValues, content: e.target.value })}
                     rows={5}
-                    style={{ ...inputStyle, resize: 'vertical', width: '100%', fontFamily: 'Crimson Pro, serif', fontSize: 15 }}
+                    className="font-crimson text-[15px] text-brown-dark bg-transparent border-none border-b border-brown-light outline-none py-0.5 w-full resize-y"
                     autoFocus
                   />
                 )}
               </>
             ) : (
-              <p style={{
-                margin: 0,
-                fontFamily: 'Crimson Pro, serif',
-                fontSize: 15,
-                color: 'var(--brown-dark)',
-                lineHeight: 1.6,
-                display: '-webkit-box',
-                WebkitLineClamp: 3,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-              }}>
+              <p className="m-0 font-crimson text-[15px] text-brown-dark leading-[1.6] line-clamp-3">
                 {n.content}
               </p>
             )}
 
             {/* Attachments section */}
-            <div style={{ marginTop: 12 }}>
+            <div className="mt-3">
               {/* Existing thumbnails */}
               {n.attachments && n.attachments.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                <div className="flex flex-wrap gap-2 mb-2.5">
                   {n.attachments.map(att => (
-                    <div key={att.id} style={{ position: 'relative', width: 80 }}>
+                    <div key={att.id} className="relative w-20">
                       <a
                         href={att.signed_url ?? '#'}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{ display: 'block', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)' }}
+                        className="block rounded-md overflow-hidden border border-bookBorder"
                       >
                         <img
                           src={att.signed_url ?? ''}
                           alt={att.file_name ?? 'attachment'}
-                          style={{ width: '100%', height: 'auto', display: 'block' }}
+                          className="w-full h-auto block"
                         />
                       </a>
                       {confirmDeleteAttachmentId === att.id ? (
-                        <div style={{
-                          position: 'absolute', top: -8, right: -8,
-                          background: 'var(--card-bg)', border: '1px solid var(--border)',
-                          borderRadius: 8, padding: '4px 6px',
-                          display: 'flex', gap: 4, alignItems: 'center',
-                          boxShadow: '0 2px 8px rgba(44,26,14,0.15)',
-                          whiteSpace: 'nowrap',
-                        }}>
+                        <div className="absolute -top-2 -right-2 bg-cardBg border border-bookBorder rounded-lg p-[4px_6px] flex gap-1 items-center shadow-[0_2px_8px_rgba(44,26,14,0.15)] whitespace-nowrap">
                           <button
                             onClick={() => { setConfirmDeleteAttachmentId(null); onDeleteAttachment(n.id, att.id) }}
                             disabled={deletingAttachmentId === att.id}
-                            style={{ ...btnBase, fontSize: 11, padding: '2px 8px', background: '#c0392b', color: '#fff' }}
+                            className="font-lora text-[11px] rounded-full border-none cursor-pointer px-2 py-0.5 bg-danger text-white"
                           >
                             Hapus
                           </button>
                           <button
                             onClick={() => setConfirmDeleteAttachmentId(null)}
-                            style={{ ...btnBase, fontSize: 11, padding: '2px 8px', background: 'var(--card-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+                            className="font-lora text-[11px] rounded-full cursor-pointer px-2 py-0.5 bg-cardBg text-muted border border-bookBorder"
                           >
                             Batal
                           </button>
@@ -1349,14 +1304,7 @@ function NotesList({ notes, editTarget, editValues, deleteTarget, saving, loadin
                         <button
                           onClick={() => setConfirmDeleteAttachmentId(att.id)}
                           disabled={deletingAttachmentId === att.id}
-                          style={{
-                            position: 'absolute', top: -6, right: -6,
-                            width: 20, height: 20, borderRadius: '50%',
-                            background: '#c0392b', color: '#fff',
-                            border: 'none', cursor: 'pointer',
-                            fontSize: 11, lineHeight: '1', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            opacity: deletingAttachmentId === att.id ? 0.5 : 1,
-                          }}
+                          className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-danger text-white border-none cursor-pointer text-[11px] leading-[1] flex items-center justify-center ${deletingAttachmentId === att.id ? 'opacity-50' : ''}`}
                           title="Hapus foto"
                         >
                           ×
@@ -1368,12 +1316,12 @@ function NotesList({ notes, editTarget, editValues, deleteTarget, saving, loadin
               )}
 
               {/* Upload input */}
-              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+              <label className="inline-flex items-center gap-1.5 cursor-pointer">
                 <input
                   type="file"
                   accept="image/*"
                   multiple
-                  style={{ display: 'none' }}
+                  className="hidden"
                   disabled={uploadingNoteId === n.id}
                   onChange={e => {
                     if (e.target.files && e.target.files.length > 0) {
@@ -1382,16 +1330,13 @@ function NotesList({ notes, editTarget, editValues, deleteTarget, saving, loadin
                     }
                   }}
                 />
-                <span style={{
-                  fontFamily: 'Lora, serif',
-                  fontSize: 12,
-                  color: uploadingNoteId === n.id ? 'var(--text-muted)' : '#D4824A',
-                  border: '1px solid #D4824A',
-                  borderRadius: 6,
-                  padding: '3px 10px',
-                  opacity: uploadingNoteId === n.id ? 0.6 : 1,
-                  transition: 'all 0.15s',
-                }}>
+                <span 
+                  className={`font-lora text-[12px] border border-accent rounded-md px-2.5 py-0.5 transition-all duration-150 ${
+                    uploadingNoteId === n.id 
+                      ? 'text-muted opacity-60' 
+                      : 'text-accent hover:bg-accent hover:text-white'
+                  }`}
+                >
                   {uploadingNoteId === n.id ? 'Mengunggah...' : '+ Foto'}
                 </span>
               </label>
@@ -1415,14 +1360,14 @@ function NotesFilter({ members, books, selectedMember, selectedBook, onMemberCha
   const hasActiveFilters = selectedMember || selectedBook
 
   return (
-    <div style={{ marginBottom: 20 }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
+    <div className="mb-5">
+      <div className="flex flex-wrap gap-4 items-center">
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+        <div className="flex items-center gap-2">
+          <span className="font-lora text-[12px] text-muted tracking-[0.1em] uppercase">
             Pembaca:
           </span>
-          <div style={{ flex: 1, maxWidth: 280 }}>
+          <div className="flex-1 max-w-[280px]">
             <SearchableMemberSelect
               members={members.map(m => ({ id: m.id, display_name: m.display_name }))}
               value={selectedMember || ''}
@@ -1433,11 +1378,11 @@ function NotesFilter({ members, books, selectedMember, selectedBook, onMemberCha
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 200 }}>
-          <span style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+        <div className="flex items-center gap-2 min-w-[200px]">
+          <span className="font-lora text-[12px] text-muted tracking-[0.1em] uppercase">
             Buku:
           </span>
-          <div style={{ flex: 1, maxWidth: 280 }}>
+          <div className="flex-1 max-w-[280px]">
             <SearchableBookSelect
               books={books.map(b => ({ id: b.id, title: b.title }))}
               value={selectedBook || ''}
@@ -1451,17 +1396,7 @@ function NotesFilter({ members, books, selectedMember, selectedBook, onMemberCha
         {hasActiveFilters && (
           <button
             onClick={() => { onMemberChange(null); onBookChange(null) }}
-            style={{
-              fontFamily: 'Lora, serif',
-              fontSize: 12,
-              padding: '4px 12px',
-              borderRadius: 999,
-              border: '1px solid var(--amber)',
-              background: 'transparent',
-              color: 'var(--amber)',
-              cursor: 'pointer',
-              marginLeft: 'auto',
-            }}
+            className="font-lora text-[12px] px-3 py-1 rounded-full border border-accent bg-transparent text-accent cursor-pointer ml-auto hover:bg-accent hover:text-white transition-all duration-150"
           >
             Reset filter
           </button>
@@ -1474,8 +1409,9 @@ function NotesFilter({ members, books, selectedMember, selectedBook, onMemberCha
 // ── EMPTY STATE ─────────────────────────────────────────
 function EmptyState({ text }: { text: string }) {
   return (
-    <div style={{ textAlign: 'center', padding: '20px 0' }}>
-      <p style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic' }}>{text}</p>
+    <div className="text-center py-5">
+      <p className="font-crimson text-[18px] text-muted italic">{text}</p>
     </div>
   )
 }
+
