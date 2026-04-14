@@ -121,59 +121,8 @@ export default function SearchableMemberSelect({
     }
   }
 
-  const inputStyle: React.CSSProperties = {
-    fontFamily: 'Crimson Pro, serif',
-    fontSize: 15,
-    color: value ? '#2C1A0E' : '#7A5C3E',
-    background: 'transparent',
-    border: 'none',
-    borderBottom: '1px solid #C4956A',
-    outline: 'none',
-    padding: '2px 24px 2px 0',
-    width: '100%',
-  }
-
-  const dropdownStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    marginTop: 4,
-    backgroundColor: '#FAF6EE',
-    border: '1px solid rgba(107, 63, 31, 0.15)',
-    borderRadius: 8,
-    boxShadow: '0 4px 12px rgba(44, 26, 14, 0.1)',
-    maxHeight: 240,
-    overflowY: 'auto',
-  }
-
-  const getItemStyle = (isHighlighted: boolean): React.CSSProperties => ({
-    padding: '8px 16px',
-    cursor: 'pointer',
-    fontFamily: 'Crimson Pro, serif',
-    fontSize: 15,
-    color: '#2C1A0E',
-    backgroundColor: isHighlighted ? 'rgba(212, 130, 74, 0.15)' : 'transparent',
-    transition: 'background-color 0.15s',
-  })
-
-  const clearButtonStyle: React.CSSProperties = {
-    position: 'absolute',
-    right: 0,
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: 16,
-    color: '#7A5C3E',
-    padding: 4,
-    lineHeight: 1,
-  }
-
   return (
-    <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
+    <div ref={containerRef} className="relative w-full">
       <input
         ref={inputRef}
         type="text"
@@ -183,16 +132,16 @@ export default function SearchableMemberSelect({
         onKeyDown={handleKeyDown}
         placeholder={displayValue || placeholder}
         readOnly={!isOpen}
-        style={inputStyle}
+        className={`font-crimson text-[15px] bg-transparent border-none border-b border-brown-light outline-none py-0.5 pr-6 w-full ${
+          value ? 'text-brown-dark' : 'text-muted'
+        }`}
       />
 
       {value && !isOpen && (
         <button
           type="button"
           onClick={handleClear}
-          style={clearButtonStyle}
-          onMouseEnter={e => { e.currentTarget.style.color = '#D4824A' }}
-          onMouseLeave={e => { e.currentTarget.style.color = '#7A5C3E' }}
+          className="absolute right-0 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-base text-muted p-1 leading-none hover:text-accent transition-colors duration-150"
           title="Hapus pilihan"
         >
           ×
@@ -200,16 +149,21 @@ export default function SearchableMemberSelect({
       )}
 
       {isOpen && (
-        <div ref={listRef} style={dropdownStyle}>
+        <div 
+          ref={listRef} 
+          className="absolute top-full left-0 right-0 z-[1000] mt-1 bg-cardBg border border-bookBorder rounded-lg shadow-card max-h-60 overflow-y-auto"
+        >
           {filteredMembers.length === 0 ? (
-            <div style={{ ...getItemStyle(false), color: '#7A5C3E', fontStyle: 'italic' }}>
+            <div className="px-4 py-2 font-crimson text-[15px] text-muted italic">
               {emptyLabel}
             </div>
           ) : (
             filteredMembers.map((member, index) => (
               <div
                 key={member.id}
-                style={getItemStyle(index === highlightedIndex)}
+                className={`px-4 py-2 cursor-pointer font-crimson text-[15px] text-brown-dark transition-colors duration-150 ${
+                  index === highlightedIndex ? 'bg-accent/[0.15]' : 'bg-transparent'
+                }`}
                 onMouseEnter={() => setHighlightedIndex(index)}
                 onMouseLeave={() => setHighlightedIndex(-1)}
                 onClick={() => handleSelect(member.id)}

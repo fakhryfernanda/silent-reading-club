@@ -164,95 +164,30 @@ export default function SearchableBookSelect({
     }
   }
 
-  // Input style (matches project's inputStyle)
-  const inputStyle: React.CSSProperties = {
-    fontFamily: 'Crimson Pro, serif',
-    fontSize: 15,
-    color: value ? '#2C1A0E' : '#7A5C3E',
-    background: 'transparent',
-    border: 'none',
-    borderBottom: '1px solid #C4956A',
-    outline: 'none',
-    padding: '2px 24px 2px 0',
-    width: '100%',
-  }
-
-  // Dropdown container style
-  const dropdownStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    marginTop: 4,
-    backgroundColor: '#FAF6EE',
-    border: '1px solid rgba(107, 63, 31, 0.15)',
-    borderRadius: 8,
-    boxShadow: '0 4px 12px rgba(44, 26, 14, 0.1)',
-    maxHeight: 240,
-    overflowY: 'auto',
-  }
-
-  // List item style
-  const getItemStyle = (isHighlighted: boolean): React.CSSProperties => ({
-    padding: '8px 16px',
-    cursor: 'pointer',
-    fontFamily: 'Crimson Pro, serif',
-    fontSize: 15,
-    color: '#2C1A0E',
-    backgroundColor: isHighlighted ? 'rgba(212, 130, 74, 0.15)' : 'transparent',
-    transition: 'background-color 0.15s',
-  })
-
-  // Clear button style
-  const clearButtonStyle: React.CSSProperties = {
-    position: 'absolute',
-    right: 0,
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: 16,
-    color: '#7A5C3E',
-    padding: 4,
-    lineHeight: 1,
-  }
-
   return (
-    <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
+    <div ref={containerRef} className="relative w-full">
       {/* Read mode toggle - only show when member is selected */}
       {showFilterToggle && (
-        <div style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+        <div className="flex gap-2 mb-2 items-center">
           <button
             type="button"
             onClick={() => setReadMode('continue')}
-            style={{
-              fontFamily: 'Lora, serif',
-              fontSize: 12,
-              padding: '4px 12px',
-              borderRadius: 999,
-              cursor: 'pointer',
-              background: readMode === 'continue' ? '#D4824A' : 'transparent',
-              color: readMode === 'continue' ? '#fff' : '#D4824A',
-              border: readMode === 'continue' ? 'none' : '1px solid #D4824A',
-            }}
+            className={`font-lora text-xs px-3 py-1 rounded-full cursor-pointer ${
+              readMode === 'continue' 
+                ? 'bg-accent text-white border-none' 
+                : 'bg-transparent text-accent border border-accent'
+            }`}
           >
             Lanjut baca
           </button>
           <button
             type="button"
             onClick={() => setReadMode('new')}
-            style={{
-              fontFamily: 'Lora, serif',
-              fontSize: 12,
-              padding: '4px 12px',
-              borderRadius: 999,
-              cursor: 'pointer',
-              background: readMode === 'new' ? '#D4824A' : 'transparent',
-              color: readMode === 'new' ? '#fff' : '#D4824A',
-              border: readMode === 'new' ? 'none' : '1px solid #D4824A',
-            }}
+            className={`font-lora text-xs px-3 py-1 rounded-full cursor-pointer ${
+              readMode === 'new' 
+                ? 'bg-accent text-white border-none' 
+                : 'bg-transparent text-accent border border-accent'
+            }`}
           >
             Buku baru
           </button>
@@ -268,7 +203,9 @@ export default function SearchableBookSelect({
         onKeyDown={handleKeyDown}
         placeholder={displayValue || placeholder}
         readOnly={!isOpen}
-        style={inputStyle}
+        className={`font-crimson text-[15px] bg-transparent border-none border-b border-brown-light outline-none py-0.5 pr-6 w-full ${
+          value ? 'text-brown-dark' : 'text-muted'
+        }`}
       />
 
       {/* Clear button */}
@@ -276,9 +213,7 @@ export default function SearchableBookSelect({
         <button
           type="button"
           onClick={handleClear}
-          style={clearButtonStyle}
-          onMouseEnter={e => { e.currentTarget.style.color = '#D4824A' }}
-          onMouseLeave={e => { e.currentTarget.style.color = '#7A5C3E' }}
+          className="absolute right-0 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-base text-muted p-1 leading-none hover:text-accent transition-colors duration-150"
           title="Hapus pilihan"
         >
           ×
@@ -287,16 +222,21 @@ export default function SearchableBookSelect({
 
       {/* Dropdown */}
       {isOpen && (
-        <div ref={listRef} style={dropdownStyle}>
+        <div 
+          ref={listRef} 
+          className="absolute top-full left-0 right-0 z-[1000] mt-1 bg-cardBg border border-bookBorder rounded-lg shadow-card max-h-60 overflow-y-auto"
+        >
           {filteredBooks.length === 0 ? (
-            <div style={{ ...getItemStyle(false), color: '#7A5C3E', fontStyle: 'italic' }}>
+            <div className="px-4 py-2 font-crimson text-[15px] text-muted italic">
               {emptyLabel}
             </div>
           ) : (
             filteredBooks.map((book, index) => (
               <div
                 key={book.id}
-                style={getItemStyle(index === highlightedIndex)}
+                className={`px-4 py-2 cursor-pointer font-crimson text-[15px] text-brown-dark transition-colors duration-150 ${
+                  index === highlightedIndex ? 'bg-accent/[0.15]' : 'bg-transparent'
+                }`}
                 onMouseEnter={() => setHighlightedIndex(index)}
                 onMouseLeave={() => setHighlightedIndex(-1)}
                 onClick={() => handleSelect(book.id)}
