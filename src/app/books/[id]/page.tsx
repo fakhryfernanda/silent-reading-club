@@ -54,13 +54,13 @@ export default function BookPage() {
   }, [id])
 
   if (loading) return (
-    <div style={{ maxWidth: 860, margin: '0 auto', padding: '80px 28px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+    <div className="max-w-[860px] mx-auto px-7 py-20 text-muted italic">
       Memuat...
     </div>
   )
 
   if (!data?.book) return (
-    <div style={{ maxWidth: 860, margin: '0 auto', padding: '80px 28px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+    <div className="max-w-[860px] mx-auto px-7 py-20 text-muted italic">
       Buku tidak ditemukan.
     </div>
   )
@@ -79,72 +79,56 @@ export default function BookPage() {
   const noteCountFor = (memberId: string) => notes.filter(n => n.member_id === memberId).length
 
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px', position: 'relative' }}>
+    <div className="max-w-[860px] mx-auto px-7 relative">
 
       {/* Back */}
       <button
         onClick={() => router.push('/')}
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          fontSize: 13, color: 'var(--text-muted)', letterSpacing: '0.08em',
-          textTransform: 'uppercase', fontFamily: 'Lora, serif',
-          padding: '28px 0 0', background: 'none', border: 'none', cursor: 'pointer',
-          transition: 'color 0.15s',
-        }}
-        onMouseEnter={e => (e.currentTarget.style.color = 'var(--amber)')}
-        onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
+        className="inline-flex items-center gap-1.5 text-[13px] text-muted tracking-wider uppercase font-lora pt-7 bg-transparent border-none cursor-pointer transition-colors duration-150 hover:text-accent"
       >
         ← Semua Buku
       </button>
 
       {/* Hero */}
-      <div style={{ display: 'flex', gap: 36, padding: '32px 0 36px', borderBottom: '1px solid var(--border)', marginBottom: 48, alignItems: 'flex-start' }}>
+      <div className="flex gap-9 py-8 pb-9 border-b border-bookBorder mb-12 items-start">
         {/* Cover */}
         {book.cover_url ? (
           <img
             src={book.cover_url}
             alt={book.title}
-            style={{
-              width: 100, minWidth: 100, borderRadius: 6,
-              height: 'auto', display: 'block',
-              boxShadow: '4px 6px 20px rgba(44,26,14,0.2)',
-              objectFit: 'cover',
-            }}
+            className="w-[100px] min-w-[100px] rounded-md h-auto block shadow-[4px_6px_20px_rgba(44,26,14,0.2)] object-cover"
           />
         ) : (
-          <div style={{
-            width: 100, minWidth: 100, height: 148, borderRadius: 6,
-            background: `linear-gradient(135deg, ${avatarColor(book.title)} 0%, var(--brown-mid) 100%)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '4px 6px 20px rgba(44,26,14,0.2), inset -3px 0 8px rgba(0,0,0,0.15)',
-            position: 'relative', overflow: 'hidden',
-          }}>
-            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 8, background: 'rgba(0,0,0,0.15)', borderRadius: '6px 0 0 6px' }} />
-            <span style={{ fontFamily: 'Lora, serif', fontSize: 36, fontWeight: 600, color: 'rgba(255,255,255,0.6)', zIndex: 1 }}>
+          <div 
+            className="w-[100px] min-w-[100px] h-[148px] rounded-md flex items-center justify-center shadow-[4px_6px_20px_rgba(44,26,14,0.2),inset_-3px_0_8px_rgba(0,0,0,0.15)] relative overflow-hidden"
+            style={{ background: `linear-gradient(135deg, ${avatarColor(book.title)} 0%, #6B3F1F 100%)` }}
+          >
+            <div className="absolute left-0 top-0 bottom-0 w-2 bg-black/15 rounded-l-md" />
+            <span className="font-lora text-4xl font-semibold text-white/60 z-[1]">
               {initials(book.title)}
             </span>
           </div>
         )}
 
         {/* Meta */}
-        <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: 'Lora, serif', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--amber)', marginBottom: 8 }}>
+        <div className="flex-1">
+          <div className="font-lora text-[11px] tracking-[0.2em] uppercase text-accent mb-2">
             Silent Reading Insights
           </div>
-          <h1 style={{ fontFamily: 'Lora, serif', fontSize: 32, fontWeight: 600, color: 'var(--brown-dark)', lineHeight: 1.2, marginBottom: 6 }}>
+          <h1 className="font-lora text-[32px] font-semibold text-brown-dark leading-tight mb-1.5">
             {book.title}
           </h1>
-          <div style={{ fontSize: 17, color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: 20 }}>
+          <div className="text-[17px] text-muted italic mb-5">
             {book.author || 'Penulis tidak diketahui'}
           </div>
-          <div style={{ display: 'flex', gap: 24 }}>
+          <div className="flex gap-6">
             {[
               { num: book.reader_count, label: 'Pembaca' },
               { num: book.note_count, label: 'Catatan' },
             ].map(s => (
-              <div key={s.label} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span style={{ fontFamily: 'Lora, serif', fontSize: 20, fontWeight: 600, color: 'var(--amber)' }}>{s.num}</span>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.05em' }}>{s.label}</span>
+              <div key={s.label} className="flex flex-col gap-0.5">
+                <span className="font-lora text-xl font-semibold text-accent">{s.num}</span>
+                <span className="text-xs text-muted tracking-wide">{s.label}</span>
               </div>
             ))}
           </div>
@@ -152,27 +136,21 @@ export default function BookPage() {
       </div>
 
       {/* Section title */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <span style={{ fontFamily: 'Lora, serif', fontSize: 13, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+      <div className="flex items-center gap-3 mb-6">
+        <span className="font-lora text-[13px] tracking-widest uppercase text-muted whitespace-nowrap">
           Catatan per pembaca
         </span>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+        <div className="flex-1 h-px bg-bookBorder" />
       </div>
 
       {/* Reader tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 32, flexWrap: 'wrap' }}>
+      <div className="flex gap-2 mb-8 flex-wrap">
         {/* Semua tab */}
         <button
           onClick={() => setActiveReader('semua')}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '8px 16px', borderRadius: 999,
-            border: '1px solid var(--border)',
-            background: activeReader === 'semua' ? 'var(--amber)' : 'var(--card-bg)',
-            color: activeReader === 'semua' ? '#fff' : 'var(--text-muted)',
-            cursor: 'pointer', fontSize: 14, fontFamily: 'Crimson Pro, serif',
-            transition: 'all 0.18s',
-          }}
+          className={`flex items-center gap-2 py-2 px-4 rounded-full border border-bookBorder cursor-pointer text-sm font-crimson transition-all duration-[180ms] ${
+            activeReader === 'semua' ? 'bg-accent text-white' : 'bg-cardBg text-muted'
+          }`}
         >
           Semua
         </button>
@@ -182,75 +160,59 @@ export default function BookPage() {
           <button
             key={r.id}
             onClick={() => setActiveReader(r.id)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '8px 16px 8px 10px', borderRadius: 999,
-              border: '1px solid var(--border)',
-              background: activeReader === r.id ? 'var(--amber)' : 'var(--card-bg)',
-              color: activeReader === r.id ? '#fff' : 'var(--text-muted)',
-              cursor: 'pointer', fontSize: 14, fontFamily: 'Crimson Pro, serif',
-              transition: 'all 0.18s',
-            }}
+            className={`flex items-center gap-2 py-2 pr-4 pl-2.5 rounded-full border border-bookBorder cursor-pointer text-sm font-crimson transition-all duration-[180ms] ${
+              activeReader === r.id ? 'bg-accent text-white' : 'bg-cardBg text-muted'
+            }`}
           >
-            <div style={{
-              width: 28, height: 28, borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, fontWeight: 600, color: '#fff',
-              background: activeReader === r.id ? 'rgba(255,255,255,0.25)' : avatarColor(r.display_name),
-            }}>
+            <div 
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold text-white"
+              style={{ background: activeReader === r.id ? 'rgba(255,255,255,0.25)' : avatarColor(r.display_name) }}
+            >
               {initials(r.display_name)}
             </div>
             {r.display_name}
-            <span style={{ opacity: 0.7, fontSize: 13 }}>· {noteCountFor(r.id)}</span>
+            <span className="opacity-70 text-[13px]">· {noteCountFor(r.id)}</span>
           </button>
         ))}
       </div>
 
       {/* Notes */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 60 }}>
+      <div className="flex flex-col gap-4 mb-15">
         {filtered.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', padding: '40px 0', textAlign: 'center' }}>
+          <p className="text-muted italic py-10 text-center">
             Belum ada catatan.
           </p>
         ) : (
           filtered.map((note, i) => (
             <div
               key={note.id}
-              className="animate-fade-up"
-              style={{
-                background: 'var(--card-bg)',
-                border: '1px solid var(--border)',
-                borderRadius: 10,
-                padding: '22px 24px',
-                animationDelay: `${i * 0.06}s`,
-              }}
+              className="animate-fade-up bg-cardBg border border-bookBorder rounded-[10px] p-[22px_24px]"
+              style={{ animationDelay: `${i * 0.06}s` }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{
-                    width: 34, height: 34, borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 12, fontWeight: 600, color: '#fff',
-                    background: avatarColor(note.display_name),
-                  }}>
+              <div className="flex items-center justify-between mb-3.5">
+                <div className="flex items-center gap-2.5">
+                  <div 
+                    className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-semibold text-white"
+                    style={{ background: avatarColor(note.display_name) }}
+                  >
                     {initials(note.display_name)}
                   </div>
-                  <span style={{ fontFamily: 'Lora, serif', fontSize: 15, fontWeight: 600, color: 'var(--brown-dark)' }}>
+                  <span className="font-lora text-[15px] font-semibold text-brown-dark">
                     {note.display_name}
                   </span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div className="flex items-center gap-2.5">
                   {note.sort_order && (
-                    <span style={{ fontFamily: 'Lora, serif', fontSize: 11, color: 'var(--brown-light)', border: '1px solid var(--border)', borderRadius: 999, padding: '1px 8px' }}>
+                    <span className="font-lora text-[11px] text-brown-light border border-bookBorder rounded-full py-px px-2">
                       #{note.sort_order}
                     </span>
                   )}
-                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                  <span className="text-[13px] text-muted">
                     {timeAgo(note.created_at)}
                   </span>
                 </div>
               </div>
-              <div className="note-content" style={{ paddingLeft: 40 }}>
+              <div className="note-content pl-10">
                 {(() => {
                   const isExpanded = expandedNotes.has(note.id)
                   const shouldTruncate = note.content.length > COLLAPSE_CHAR_LIMIT
@@ -264,26 +226,7 @@ export default function BookPage() {
                       {shouldTruncate && (
                         <button
                           onClick={() => toggleNote(note.id)}
-                          style={{
-                            marginTop: 12,
-                            padding: '6px 14px',
-                            fontSize: 13,
-                            fontFamily: 'Lora, serif',
-                            color: 'var(--amber)',
-                            background: 'none',
-                            border: '1px solid var(--amber)',
-                            borderRadius: 6,
-                            cursor: 'pointer',
-                            transition: 'all 0.15s',
-                          }}
-                          onMouseEnter={e => {
-                            e.currentTarget.style.background = 'var(--amber)'
-                            e.currentTarget.style.color = '#fff'
-                          }}
-                          onMouseLeave={e => {
-                            e.currentTarget.style.background = 'none'
-                            e.currentTarget.style.color = 'var(--amber)'
-                          }}
+                          className="mt-3 py-1.5 px-3.5 text-[13px] font-lora text-accent bg-transparent border border-accent rounded-md cursor-pointer transition-all duration-150 hover:bg-accent hover:text-white"
                         >
                           {isExpanded ? 'Tutup ▲' : 'Baca selengkapnya ▼'}
                         </button>
@@ -295,13 +238,7 @@ export default function BookPage() {
 
               {/* Attachments */}
               {note.attachments && note.attachments.length > 0 && (
-                <div style={{
-                  paddingLeft: 40,
-                  marginTop: 16,
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, 120px)',
-                  gap: 8,
-                }}>
+                <div className="pl-10 mt-4 grid grid-cols-[repeat(auto-fill,120px)] gap-2">
                   {note.attachments.map((att, attIndex) => (
                     <button
                       key={att.id}
@@ -311,14 +248,12 @@ export default function BookPage() {
                         setCarouselIndex(attIndex)
                         setCarouselOpen(true)
                       }}
-                      style={{ display: 'block', width: 120, height: 120, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)', transition: 'opacity 0.15s', cursor: 'pointer', background: 'none', padding: 0 }}
-                      onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
-                      onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                      className="block w-[120px] h-[120px] rounded-md overflow-hidden border border-bookBorder transition-opacity duration-150 cursor-pointer bg-transparent p-0 hover:opacity-80"
                     >
                       <img
                         src={att.signed_url ?? ''}
                         alt={att.file_name ?? 'attachment'}
-                        style={{ width: 120, height: 120, display: 'block', objectFit: 'cover', objectPosition: 'center' }}
+                        className="w-[120px] h-[120px] block object-cover object-center"
                       />
                     </button>
                   ))}
@@ -330,33 +265,22 @@ export default function BookPage() {
       </div>
 
       {/* Footer */}
-      <footer style={{ borderTop: '1px solid var(--border)', padding: '28px 0', textAlign: 'center' }}>
-        <div style={{ fontFamily: 'Lora, serif', fontStyle: 'italic', fontSize: 16, color: 'var(--brown-mid)' }}>
+      <footer className="border-t border-bookBorder py-7 text-center">
+        <div className="font-lora italic text-base text-brown-mid">
           "We read to know we are not alone."
         </div>
-        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6 }}>— C.S. Lewis</div>
+        <div className="text-[13px] text-muted mt-1.5">— C.S. Lewis</div>
       </footer>
 
       {/* Back to Top Button */}
       <button
         onClick={scrollToTop}
+        className={`fixed bottom-8 right-8 py-2.5 px-5 text-sm font-lora border border-accent rounded-full cursor-pointer transition-all duration-[250ms] z-[100] ${
+          showBackToTop ? 'text-white bg-accent shadow-[0_4px_12px_rgba(44,26,14,0.15)]' : 'text-accent bg-cardBg shadow-none'
+        }`}
         style={{
-          position: 'fixed',
-          bottom: 32,
-          right: 32,
-          padding: '10px 20px',
-          fontSize: 14,
-          fontFamily: 'Lora, serif',
-          color: showBackToTop ? '#fff' : 'var(--amber)',
-          background: showBackToTop ? 'var(--amber)' : 'var(--card-bg)',
-          border: '1px solid var(--amber)',
-          borderRadius: 999,
-          cursor: 'pointer',
-          transition: 'all 0.25s',
           opacity: showBackToTop ? 1 : 0,
           pointerEvents: showBackToTop ? 'auto' : 'none',
-          boxShadow: showBackToTop ? '0 4px 12px rgba(44,26,14,0.15)' : 'none',
-          zIndex: 100,
         }}
       >
         ↑ Kembali ke atas

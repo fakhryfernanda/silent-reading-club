@@ -68,7 +68,7 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter, isCove
 
   if (loading) {
     return (
-      <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', padding: '40px 0', marginBottom: 60 }}>
+      <p className="text-muted italic py-10 mb-[60px]">
         Memuat...
       </p>
     )
@@ -76,7 +76,7 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter, isCove
 
   if (books.length === 0) {
     return (
-      <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', padding: '40px 0', marginBottom: 60 }}>
+      <p className="text-muted italic py-10 mb-[60px]">
         {typeFilter || readerFilter || titleFilter ? 'Tidak ada buku yang sesuai dengan filter.' : 'Belum ada buku. Kirim notes pertamamu via WhatsApp!'}
       </p>
     )
@@ -84,40 +84,15 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter, isCove
 
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 20, marginBottom: 60 }}>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-5 mb-[60px]">
         {books.map((book, i) => (
-          <Link key={book.id} href={`/books/${book.id}`} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column' }}>
+          <Link key={book.id} href={`/books/${book.id}`} className="no-underline flex flex-col">
             <div
               key={isCoverMode ? 'cover' : 'info'}
-              className="animate-fade-up"
-              style={{
-                background: 'var(--card-bg)',
-                border: '1px solid #D4824A',
-                borderRadius: 10,
-                padding: 22,
-                cursor: 'pointer',
-                position: 'relative',
-                overflow: 'hidden',
-                animationDelay: `${i * 0.07}s`,
-                transition: 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
-                height: '100%',
-              }}
-              onMouseEnter={e => {
-                if (!isCoverMode) {
-                  const el = e.currentTarget as HTMLDivElement
-                  el.style.transform = 'translateY(-3px)'
-                  el.style.boxShadow = '0 8px 28px rgba(44,26,14,0.1)'
-                  el.style.borderColor = '#2C1A0E'
-                }
-              }}
-              onMouseLeave={e => {
-                if (!isCoverMode) {
-                  const el = e.currentTarget as HTMLDivElement
-                  el.style.transform = ''
-                  el.style.boxShadow = ''
-                  el.style.borderColor = '#D4824A'
-                }
-              }}
+              className={`animate-fade-up bg-cardBg border border-accent rounded-[10px] p-[22px] cursor-pointer relative overflow-hidden h-full ${
+                !isCoverMode ? 'hover:-translate-y-[3px] hover:shadow-cardHover hover:border-brown-dark' : ''
+              } transition-all duration-200`}
+              style={{ animationDelay: `${i * 0.07}s` }}
             >
               {isCoverMode ? (
                 /* Cover mode */
@@ -126,34 +101,19 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter, isCove
                     <img
                       src={book.cover_url}
                       alt={book.title}
-                      style={{
-                        width: '100%',
-                        maxHeight: 220,
-                        objectFit: 'contain',
-                        borderRadius: 6,
-                        marginBottom: 14,
-                      }}
+                      className="w-full max-h-[220px] object-contain rounded-md mb-[14px]"
                     />
                   ) : (
-                    <div style={{
-                      width: '100%',
-                      height: 160,
-                      background: '#E8E0D4',
-                      borderRadius: 6,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: 14,
-                    }}>
-                      <span style={{ fontFamily: 'Lora, serif', fontSize: 14, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                    <div className="w-full h-40 bg-placeholder rounded-md flex items-center justify-center mb-[14px]">
+                      <span className="font-lora text-sm text-muted italic">
                         No Cover
                       </span>
                     </div>
                   )}
-                  <div style={{ fontFamily: 'Lora, serif', fontSize: 17, fontWeight: 600, color: 'var(--brown-dark)', lineHeight: 1.3, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textAlign: 'center' }}>
+                  <div className="font-lora text-[17px] font-semibold text-brown-dark leading-tight mb-1 line-clamp-2 text-center">
                     {book.title}
                   </div>
-                  <div style={{ fontSize: 14, color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'center' }}>
+                  <div className="text-sm text-muted italic text-center">
                     {book.author || 'Penulis tidak diketahui'}
                   </div>
                 </>
@@ -161,61 +121,57 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter, isCove
                 /* Info mode (original layout) */
                 <>
                   {/* Accent bar - full height */}
-                  <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: 'linear-gradient(to bottom, var(--amber), var(--brown-light))', borderRadius: '10px 0 0 10px' }} />
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-accent to-brown-light rounded-l-[10px]" />
 
-                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 260, paddingLeft: 0, justifyContent: 'space-between' }}>
+                  <div className="flex flex-col h-full min-h-[260px] pl-0 justify-between">
                     {/* TOP SECTION: Book Info */}
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: 'Lora, serif', fontSize: 17, fontWeight: 600, color: 'var(--brown-dark)', lineHeight: 1.3, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    <div className="flex-1">
+                      <div className="font-lora text-[17px] font-semibold text-brown-dark leading-tight mb-1 line-clamp-2">
                         {book.title}
                       </div>
-                      <div style={{ fontSize: 14, color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: 6 }}>
+                      <div className="text-sm text-muted italic mb-1.5">
                         {book.author || 'Penulis tidak diketahui'}
                       </div>
                       {book.type && (
-                        <span style={{ fontFamily: 'Lora, serif', fontSize: 10, color: 'var(--amber)', border: '1px solid var(--amber)', borderRadius: 999, padding: '2px 7px', whiteSpace: 'nowrap', display: 'inline-block', marginBottom: 16 }}>
+                        <span className="font-lora text-[10px] text-accent border border-accent rounded-full px-[7px] py-0.5 whitespace-nowrap inline-block mb-4">
                           {book.type}
                         </span>
                       )}
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8}}>
-                        <div style={{ display: 'flex' }}>
+                      <div className="flex items-center gap-2">
+                        <div className="flex">
                           {(book.readers || []).slice(0, 4).map((r, ri) => (
-                            <div key={r.id} style={{
-                              width: 30, height: 30, borderRadius: '50%',
-                              border: '2px solid var(--card-bg)',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontSize: 11, fontWeight: 600, color: '#fff', lineHeight: 1,
-                              background: avatarColor((r as any).alias || r.display_name),
-                              marginLeft: ri === 0 ? 0 : -6,
-                            }}>
+                            <div 
+                              key={r.id} 
+                              className="w-[30px] h-[30px] rounded-full border-2 border-cardBg flex items-center justify-center text-[11px] font-semibold text-white leading-none"
+                              style={{
+                                background: avatarColor((r as any).alias || r.display_name),
+                                marginLeft: ri === 0 ? 0 : -6,
+                              }}
+                            >
                               {(r as any).alias ? initials((r as any).alias) : (r.display_name ? initials(r.display_name) : '?')}
                             </div>
                           ))}
                         </div>
-                        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                        <span className="text-[13px] text-muted">
                           {book.reader_count} pembaca · {book.note_count} catatan
                         </span>
                       </div>
                     </div>
 
                     {/* BOTTOM SECTION: Note Excerpt (always shown) */}
-                    <div style={{ paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+                    <div className="pt-[14px] border-t border-bookBorder">
                       {book.latest_note ? (
                         <>
-                          <div style={{
-                            fontSize: 14, color: 'var(--text-muted)', fontStyle: 'italic',
-                            lineHeight: 1.5, display: '-webkit-box',
-                            WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                          }}>
+                          <div className="text-sm text-muted italic leading-relaxed line-clamp-2">
                             "{stripMarkdown(book.latest_note)}"
                           </div>
-                          <div style={{ fontSize: 12, color: 'var(--amber)', marginTop: 6 }}>
+                          <div className="text-xs text-accent mt-1.5">
                             &mdash; {book.latest_note_by || 'Anonim'}{book.latest_note_at ? `, ${timeAgo(book.latest_note_at)}` : ''}
                           </div>
                         </>
                       ) : (
-                        <div style={{ fontSize: 13, color: 'var(--text-muted)', fontStyle: 'italic', lineHeight: 1.5 }}>
+                        <div className="text-[13px] text-muted italic leading-relaxed">
                           Belum ada catatan dari buku ini
                         </div>
                       )}
@@ -230,38 +186,16 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter, isCove
 
       {/* Pagination UI */}
       {totalPages > 1 && (
-        <div data-pagination style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 12,
-          marginBottom: 60,
-          paddingTop: 24,
-          borderTop: '1px solid rgba(107, 63, 31, 0.15)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div data-pagination>
+          <div className="flex items-center gap-4">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              style={{
-                fontFamily: 'Lora, serif',
-                fontSize: 14,
-                color: currentPage === 1 ? '#7A5C3E' : '#2C1A0E',
-                background: 'none',
-                border: 'none',
-                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                padding: '8px 16px',
-                opacity: currentPage === 1 ? 0.5 : 1,
-                transition: 'opacity 0.2s',
-              }}
-              onMouseEnter={e => {
-                if (currentPage !== 1) {
-                  (e.target as HTMLButtonElement).style.color = '#D4824A'
-                }
-              }}
-              onMouseLeave={e => {
-                (e.target as HTMLButtonElement).style.color = currentPage === 1 ? '#7A5C3E' : '#2C1A0E'
-              }}
+              className={`font-lora text-sm bg-transparent border-none px-4 py-2 transition-colors duration-200 ${
+                currentPage === 1 
+                  ? 'text-muted cursor-not-allowed opacity-50' 
+                  : 'text-brown-dark cursor-pointer hover:text-accent'
+              }`}
             >
               ← Sebelumnya
             </button>
@@ -269,65 +203,27 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter, isCove
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              style={{
-                fontFamily: 'Lora, serif',
-                fontSize: 14,
-                color: currentPage === totalPages ? '#7A5C3E' : '#2C1A0E',
-                background: 'none',
-                border: 'none',
-                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                padding: '8px 16px',
-                opacity: currentPage === totalPages ? 0.5 : 1,
-                transition: 'opacity 0.2s',
-              }}
-              onMouseEnter={e => {
-                if (currentPage !== totalPages) {
-                  (e.target as HTMLButtonElement).style.color = '#D4824A'
-                }
-              }}
-              onMouseLeave={e => {
-                (e.target as HTMLButtonElement).style.color = currentPage === totalPages ? '#7A5C3E' : '#2C1A0E'
-              }}
+              className={`font-lora text-sm bg-transparent border-none px-4 py-2 transition-colors duration-200 ${
+                currentPage === totalPages 
+                  ? 'text-muted cursor-not-allowed opacity-50' 
+                  : 'text-brown-dark cursor-pointer hover:text-accent'
+              }`}
             >
               Selanjutnya →
             </button>
           </div>
 
           {/* Page number buttons */}
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div className="flex gap-1.5 flex-wrap justify-center">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
               <button
                 key={page}
                 onClick={() => handlePageChange(page)}
-                style={{
-                  fontFamily: 'Lora, serif',
-                  fontSize: 13,
-                  width: 32,
-                  height: 32,
-                  borderRadius: '50%',
-                  border: page === currentPage ? 'none' : '1px solid rgba(107, 63, 31, 0.15)',
-                  background: page === currentPage ? '#D4824A' : '#FAF6EE',
-                  color: page === currentPage ? '#fff' : '#7A5C3E',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.15s',
-                }}
-                onMouseEnter={e => {
-                  if (page !== currentPage) {
-                    const el = e.target as HTMLButtonElement
-                    el.style.color = '#D4824A'
-                    el.style.borderColor = '#D4824A'
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (page !== currentPage) {
-                    const el = e.target as HTMLButtonElement
-                    el.style.color = '#7A5C3E'
-                    el.style.borderColor = 'rgba(107, 63, 31, 0.15)'
-                  }
-                }}
+                className={`font-lora text-[13px] w-8 h-8 rounded-full cursor-pointer flex items-center justify-center transition-all duration-150 ${
+                  page === currentPage
+                    ? 'border-none bg-accent text-white'
+                    : 'border border-bookBorder bg-cardBg text-muted hover:text-accent hover:border-accent'
+                }`}
               >
                 {page}
               </button>

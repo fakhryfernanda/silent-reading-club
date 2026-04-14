@@ -120,8 +120,8 @@ function HomePageContent() {
 
   if (loading || !stats) {
     return (
-      <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px' }}>
-        <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', padding: '40px 0' }}>
+      <div className="max-w-[860px] mx-auto px-7">
+        <p className="text-muted italic py-10">
           Memuat...
         </p>
       </div>
@@ -129,24 +129,24 @@ function HomePageContent() {
   }
 
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px' }}>
+    <div className="max-w-[860px] mx-auto px-7">
 
-      <header style={{ padding: '24px 0 32px', borderBottom: '1px solid var(--border)', marginBottom: 32 }} className="homepage-header">
-        <h1 style={{ fontFamily: 'Lora, serif', fontSize: 52, fontWeight: 600, color: 'var(--brown-dark)', lineHeight: 1.1, marginBottom: 12 }} className="homepage-heading">
+      <header className="pt-6 pb-8 md:pt-12 md:pb-8 border-b border-bookBorder mb-6 md:mb-8">
+        <h1 className="font-lora text-4xl md:text-[52px] font-semibold text-brown-dark leading-tight mb-3">
           Silent Reading Insights
         </h1>
-        <p style={{ fontSize: 18, color: 'var(--text-muted)', fontStyle: 'italic', fontFamily: 'Lora, serif' }}>
+        <p className="text-lg text-muted italic font-lora">
           Mengubah literasi menjadi inspirasi
         </p>
-        <div style={{ display: 'flex', gap: 32, marginTop: 24 }}>
+        <div className="flex gap-8 mt-6">
           {[
             { num: stats.totalBooks, label: 'Buku' },
             { num: stats.totalReaders, label: 'Pembaca' },
             { num: stats.totalNotes, label: 'Catatan' },
           ].map(s => (
-            <div key={s.label} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span style={{ fontFamily: 'Lora, serif', fontSize: 22, fontWeight: 600, color: 'var(--amber)' }}>{s.num}</span>
-              <span style={{ fontSize: 13, color: 'var(--text-muted)', letterSpacing: '0.05em' }}>{s.label}</span>
+            <div key={s.label} className="flex flex-col gap-0.5">
+              <span className="font-lora text-[22px] font-semibold text-accent">{s.num}</span>
+              <span className="text-[13px] text-muted tracking-wide">{s.label}</span>
             </div>
           ))}
         </div>
@@ -168,11 +168,11 @@ function HomePageContent() {
 
       <BookGrid typeFilter={selectedType} readerFilter={selectedReader} titleFilter={selectedTitle} isCoverMode={isCoverMode} />
 
-      <footer style={{ borderTop: '1px solid var(--border)', padding: '28px 0', textAlign: 'center' }}>
-        <div style={{ fontFamily: 'Lora, serif', fontStyle: 'italic', fontSize: 16, color: 'var(--brown-mid)' }}>
+      <footer className="border-t border-bookBorder py-7 text-center">
+        <div className="font-lora italic text-base text-brown-mid">
           "We read to know we are not alone."
         </div>
-        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6 }}>— C.S. Lewis</div>
+        <div className="text-[13px] text-muted mt-1.5">— C.S. Lewis</div>
       </footer>
     </div>
   )
@@ -181,8 +181,8 @@ function HomePageContent() {
 export default function HomePage() {
   return (
     <Suspense fallback={
-      <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px' }}>
-        <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', padding: '40px 0' }}>
+      <div className="max-w-[860px] mx-auto px-7">
+        <p className="text-muted italic py-10">
           Memuat...
         </p>
       </div>

@@ -161,42 +161,13 @@ export default function ImageCarousel({ images, initialIndex, onClose }: ImageCa
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(245, 240, 234, 0.95)',
-        zIndex: 1000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        animation: 'fadeIn 0.2s ease-out',
-      }}
+      className="fixed inset-0 bg-cream/95 z-[1000] flex items-center justify-center animate-[fadeIn_0.2s_ease-out]"
       onClick={onClose}
     >
       {/* Close button */}
       <button
         onClick={onClose}
-        style={{
-          position: 'absolute',
-          top: 20,
-          right: 20,
-          width: 44,
-          height: 44,
-          borderRadius: '50%',
-          background: 'rgba(44, 26, 14, 0.1)',
-          border: '1px solid rgba(44, 26, 14, 0.2)',
-          color: 'var(--brown-dark)',
-          fontSize: 24,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.15s',
-          zIndex: 1001,
-        }}
+        className="absolute top-5 right-5 w-11 h-11 rounded-full bg-brown-dark/10 border border-brown-dark/20 text-brown-dark text-2xl cursor-pointer flex items-center justify-center transition-all duration-150 z-[1001] hover:bg-brown-dark/20"
         onMouseEnter={e => (e.currentTarget.style.background = 'rgba(44, 26, 14, 0.2)')}
         onMouseLeave={e => (e.currentTarget.style.background = 'rgba(44, 26, 14, 0.1)')}
       >
@@ -210,25 +181,7 @@ export default function ImageCarousel({ images, initialIndex, onClose }: ImageCa
             e.stopPropagation()
             goToPrev()
           }}
-          style={{
-            position: 'absolute',
-            left: 20,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 48,
-            height: 48,
-            borderRadius: '50%',
-            background: 'rgba(44, 26, 14, 0.1)',
-            border: '1px solid rgba(44, 26, 14, 0.2)',
-            color: 'var(--brown-dark)',
-            fontSize: 28,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.15s',
-            zIndex: 1001,
-          }}
+          className="absolute left-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-brown-dark/10 border border-brown-dark/20 text-brown-dark text-[28px] cursor-pointer flex items-center justify-center transition-all duration-150 z-[1001] hover:bg-brown-dark/20"
           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(44, 26, 14, 0.2)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'rgba(44, 26, 14, 0.1)')}
         >
@@ -243,25 +196,7 @@ export default function ImageCarousel({ images, initialIndex, onClose }: ImageCa
             e.stopPropagation()
             goToNext()
           }}
-          style={{
-            position: 'absolute',
-            right: 20,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 48,
-            height: 48,
-            borderRadius: '50%',
-            background: 'rgba(44, 26, 14, 0.1)',
-            border: '1px solid rgba(44, 26, 14, 0.2)',
-            color: 'var(--brown-dark)',
-            fontSize: 28,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.15s',
-            zIndex: 1001,
-          }}
+          className="absolute right-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-brown-dark/10 border border-brown-dark/20 text-brown-dark text-[28px] cursor-pointer flex items-center justify-center transition-all duration-150 z-[1001] hover:bg-brown-dark/20"
           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(44, 26, 14, 0.2)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'rgba(44, 26, 14, 0.1)')}
         >
@@ -281,62 +216,30 @@ export default function ImageCarousel({ images, initialIndex, onClose }: ImageCa
         onTouchMove={onTouchMovePan}
         onTouchEnd={onTouchEndPan}
         onWheel={onWheel}
+        className="relative max-w-[90vw] max-h-[90vh] flex items-center justify-center"
         style={{
-          position: 'relative',
-          maxWidth: '90vw',
-          maxHeight: '90vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
           overflow: zoom > 1 ? 'auto' : 'visible',
         }}
       >
-        <style>{`
-          [data-carousel-scroll]::-webkit-scrollbar {
-            display: none;
-          }
-          [data-carousel-scroll] {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
-        `}</style>
         <img
           src={images[currentIndex]}
           alt={`Image ${currentIndex + 1}`}
           onLoad={handleImageLoad}
           onDoubleClick={onDoubleClick}
           draggable={false}
+          className="w-auto h-auto block rounded-lg shadow-[0_8px_32px_rgba(44,26,14,0.2)] select-none origin-center"
           style={{
             maxWidth: imageOrientation === 'landscape' ? '90vw' : 'auto',
             maxHeight: imageOrientation === 'portrait' ? '90vh' : 'auto',
-            width: 'auto',
-            height: 'auto',
-            display: 'block',
-            borderRadius: 8,
-            boxShadow: '0 8px 32px rgba(44, 26, 14, 0.2)',
             transition: isPanning ? 'none' : 'transform 0.2s ease-in-out',
             transform: `scale(${zoom}) translate(${panX / zoom}px, ${panY / zoom}px)`,
-            transformOrigin: 'center center',
             cursor: zoom > 1 ? (isPanning ? 'grabbing' : 'grab') : 'default',
-            userSelect: 'none',
           }}
         />
 
         {/* Image counter */}
         {images.length > 1 && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: -40,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              color: 'var(--text-muted)',
-              fontSize: 14,
-              fontFamily: 'Crimson Pro, serif',
-              letterSpacing: '0.05em',
-              pointerEvents: 'none',
-            }}
-          >
+          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-brown-dark/60 text-sm font-crimson tracking-wider pointer-events-none">
             {currentIndex + 1} / {images.length}
           </div>
         )}
@@ -344,11 +247,7 @@ export default function ImageCarousel({ images, initialIndex, onClose }: ImageCa
         {/* Swipe gesture layer (only when zoom = 1) */}
         {zoom === 1 && (
           <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 1,
-            }}
+            className="absolute inset-0 z-[1]"
             onTouchStart={onTouchStartSwipe}
             onTouchMove={onTouchMoveSwipe}
             onTouchEnd={onTouchEndSwipe}
@@ -357,36 +256,14 @@ export default function ImageCarousel({ images, initialIndex, onClose }: ImageCa
       </div>
 
       {/* Zoom controls */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 24,
-          right: 24,
-          display: 'flex',
-          gap: 8,
-          alignItems: 'center',
-          zIndex: 1001,
-        }}
-      >
+      <div className="absolute bottom-6 right-6 flex gap-2 items-center z-[1001]">
         <button
           onClick={(e) => {
             e.stopPropagation()
             zoomOut()
           }}
+          className="w-10 h-10 rounded-full bg-brown-dark/10 border border-brown-dark/20 text-brown-dark text-xl font-semibold cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-brown-dark/20"
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: '50%',
-            background: 'rgba(44, 26, 14, 0.1)',
-            border: '1px solid rgba(44, 26, 14, 0.2)',
-            color: 'var(--brown-dark)',
-            fontSize: 20,
-            fontWeight: 600,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.15s',
             opacity: zoom <= minZoom ? 0.4 : 1,
           }}
           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(44, 26, 14, 0.2)')}
@@ -399,22 +276,7 @@ export default function ImageCarousel({ images, initialIndex, onClose }: ImageCa
             e.stopPropagation()
             resetZoom()
           }}
-          style={{
-            padding: '0 12px',
-            height: 40,
-            borderRadius: 20,
-            background: 'rgba(44, 26, 14, 0.1)',
-            border: '1px solid rgba(44, 26, 14, 0.2)',
-            color: 'var(--brown-dark)',
-            fontSize: 13,
-            fontFamily: 'Crimson Pro, serif',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.15s',
-            minWidth: 60,
-          }}
+          className="px-3 h-10 rounded-[20px] bg-brown-dark/10 border border-brown-dark/20 text-brown-dark text-[13px] font-crimson cursor-pointer flex items-center justify-center transition-all duration-150 min-w-[60px] hover:bg-brown-dark/20"
           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(44, 26, 14, 0.2)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'rgba(44, 26, 14, 0.1)')}
         >
@@ -425,20 +287,8 @@ export default function ImageCarousel({ images, initialIndex, onClose }: ImageCa
             e.stopPropagation()
             zoomIn()
           }}
+          className="w-10 h-10 rounded-full bg-brown-dark/10 border border-brown-dark/20 text-brown-dark text-xl font-semibold cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-brown-dark/20"
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: '50%',
-            background: 'rgba(44, 26, 14, 0.1)',
-            border: '1px solid rgba(44, 26, 14, 0.2)',
-            color: 'var(--brown-dark)',
-            fontSize: 20,
-            fontWeight: 600,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.15s',
             opacity: zoom >= maxZoom ? 0.4 : 1,
           }}
           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(44, 26, 14, 0.2)')}
@@ -447,17 +297,6 @@ export default function ImageCarousel({ images, initialIndex, onClose }: ImageCa
           +
         </button>
       </div>
-
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-      `}</style>
     </div>
   )
 }
