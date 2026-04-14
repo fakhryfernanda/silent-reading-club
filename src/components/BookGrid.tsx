@@ -133,7 +133,7 @@ export default function BookGrid({ typeFilter, readerFilter, titleFilter, isCove
                         {book.author || 'Penulis tidak diketahui'}
                       </div>
                       {book.type && (
-                        <span className="font-lora text-[10px] text-accent border border-accent rounded-full px-[7px] py-0.5 whitespace-nowrap inline-block mb-4">
+                        <span className="font-lora text-[10px] text-accent border border-accent rounded-full px-[7px] py-0.5 whitespace-nowrap inline-block mb-2">
                           {book.type}
                         </span>
                       )}

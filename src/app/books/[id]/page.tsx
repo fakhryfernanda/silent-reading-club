@@ -25,6 +25,7 @@ export default function BookPage() {
   const [carouselOpen, setCarouselOpen] = useState(false)
   const [carouselImages, setCarouselImages] = useState<string[]>([])
   const [carouselIndex, setCarouselIndex] = useState(0)
+  const [fontSizeLevel, setFontSizeLevel] = useState<'A' | 'A+' | 'A++'>('A')
 
   useEffect(() => {
     const handleScroll = () => {
@@ -53,6 +54,12 @@ export default function BookPage() {
       .then(d => { setData(d); setLoading(false) })
   }, [id])
 
+  useEffect(() => {
+    if (data?.book) {
+      document.title = `${data.book.title} — Silent Reading Club`
+    }
+  }, [data])
+
   if (loading) return (
     <div className="max-w-[860px] mx-auto px-7 py-20 text-muted italic">
       Memuat...
@@ -78,8 +85,23 @@ export default function BookPage() {
 
   const noteCountFor = (memberId: string) => notes.filter(n => n.member_id === memberId).length
 
+  const baseFontSize = 16
+  const fontSize = baseFontSize + (fontSizeLevel === 'A+' ? 2 : fontSizeLevel === 'A++' ? 4 : 0)
+
   return (
     <div className="max-w-[860px] mx-auto px-7 relative">
+
+      {/* Override prose font sizes so they inherit from parent */}
+      <style>{`
+        .note-content p,
+        .note-content li,
+        .note-content blockquote,
+        .note-content td,
+        .note-content th,
+        .note-content figcaption {
+          font-size: inherit !important;
+        }
+      `}</style>
 
       {/* Back */}
       <button
@@ -90,7 +112,7 @@ export default function BookPage() {
       </button>
 
       {/* Hero */}
-      <div className="flex gap-9 py-8 pb-9 border-b border-bookBorder mb-12 items-start">
+      <div className="flex gap-9 py-4 pb-7 mb-8 items-start">
         {/* Cover */}
         {book.cover_url ? (
           <img
@@ -141,6 +163,21 @@ export default function BookPage() {
           Catatan per pembaca
         </span>
         <div className="flex-1 h-px bg-bookBorder" />
+        <div className="flex gap-1 items-center">
+          {(['A', 'A+', 'A++'] as const).map(size => (
+            <button
+              key={size}
+              onClick={() => setFontSizeLevel(size)}
+              className={`font-lora text-[11px] px-2 py-0.5 rounded cursor-pointer transition-all duration-150 ${
+                fontSizeLevel === size
+                  ? 'bg-accent text-white border-none'
+                  : 'bg-cardBg text-muted border border-bookBorder'
+              }`}
+            >
+              {size}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Reader tabs */}
@@ -212,7 +249,7 @@ export default function BookPage() {
                   </span>
                 </div>
               </div>
-              <div className="note-content pl-10">
+              <div className="note-content" style={{ fontSize: `${fontSize}px` }}>
                 {(() => {
                   const isExpanded = expandedNotes.has(note.id)
                   const shouldTruncate = note.content.length > COLLAPSE_CHAR_LIMIT
@@ -238,7 +275,7 @@ export default function BookPage() {
 
               {/* Attachments */}
               {note.attachments && note.attachments.length > 0 && (
-                <div className="pl-10 mt-4 grid grid-cols-[repeat(auto-fill,120px)] gap-2">
+                <div className="mt-4 grid grid-cols-[repeat(auto-fill,120px)] gap-2">
                   {note.attachments.map((att, attIndex) => (
                     <button
                       key={att.id}
