@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import { timeAgo, avatarColor, initials } from '@/lib/utils'
 import BookFilters from '@/components/BookFilters'
 import SearchableBookSelect from '@/components/SearchableBookSelect'
+import SearchableMemberSelect from '@/components/SearchableMemberSelect'
 import type { Attachment } from '@/lib/types'
 
 type AdminMember = {
@@ -105,7 +106,6 @@ export default function AdminPage() {
   const [bookTitleFilter, setBookTitleFilter] = useState<string | null>(null)
   const [noteMemberFilter, setNoteMemberFilter] = useState<string | null>(null)
   const [noteBookFilter, setNoteBookFilter] = useState<string | null>(null)
-  const [noteBookTitleFilter, setNoteBookTitleFilter] = useState<string | null>(null)
   
   const keyRef = useRef<string>('')
 
@@ -126,7 +126,7 @@ export default function AdminPage() {
     if (!loading && data) {
       fetchData()
     }
-  }, [bookTypeFilter, bookReaderFilter, bookTitleFilter, noteMemberFilter, noteBookFilter, noteBookTitleFilter])
+  }, [bookTypeFilter, bookReaderFilter, bookTitleFilter, noteMemberFilter, noteBookFilter])
 
   async function fetchData() {
     setLoading(true)
@@ -137,7 +137,6 @@ export default function AdminPage() {
       if (bookTitleFilter) params.set('bookTitle', bookTitleFilter)
       if (noteMemberFilter) params.set('noteMemberId', noteMemberFilter)
       if (noteBookFilter) params.set('noteBookId', noteBookFilter)
-      if (noteBookTitleFilter) params.set('noteBookTitle', noteBookTitleFilter)
       
       const res = await fetch(`/api/admin/data?${params.toString()}`)
       if (res.status === 401) {
@@ -566,7 +565,6 @@ export default function AdminPage() {
                 if (t === 'books') {
                   setNoteMemberFilter(null)
                   setNoteBookFilter(null)
-                  setNoteBookTitleFilter(null)
                 } else if (t === 'notes') {
                   setBookTypeFilter(null)
                   setBookReaderFilter(null)
@@ -577,7 +575,6 @@ export default function AdminPage() {
                   setBookTitleFilter(null)
                   setNoteMemberFilter(null)
                   setNoteBookFilter(null)
-                  setNoteBookTitleFilter(null)
                 }
               }}
               style={{
@@ -808,10 +805,8 @@ export default function AdminPage() {
             books={data.books}
             selectedMember={noteMemberFilter}
             selectedBook={noteBookFilter}
-            selectedBookTitle={noteBookTitleFilter}
             onMemberChange={setNoteMemberFilter}
             onBookChange={setNoteBookFilter}
-            onBookTitleChange={setNoteBookTitleFilter}
           />
           <NotesList
             notes={data.notes}
@@ -821,7 +816,7 @@ export default function AdminPage() {
             saving={saving}
             loading={loading}
             notePreview={notePreview}
-            hasActiveFilters={!!noteMemberFilter || !!noteBookFilter || !!noteBookTitleFilter}
+            hasActiveFilters={!!noteMemberFilter || !!noteBookFilter}
             uploadingNoteId={uploadingNoteId}
             deletingAttachmentId={deletingAttachmentId}
             onTogglePreview={() => setNotePreview(p => !p)}
@@ -1407,104 +1402,33 @@ function NotesList({ notes, editTarget, editValues, deleteTarget, saving, loadin
 }
 
 // ── NOTES FILTER ────────────────────────────────────────
-function NotesFilter({ members, books, selectedMember, selectedBook, selectedBookTitle, onMemberChange, onBookChange, onBookTitleChange }: {
+function NotesFilter({ members, books, selectedMember, selectedBook, onMemberChange, onBookChange }: {
   members: AdminMember[]
   books: AdminBook[]
   selectedMember: string | null
   selectedBook: string | null
-  selectedBookTitle: string | null
   onMemberChange: (id: string | null) => void
   onBookChange: (id: string | null) => void
-  onBookTitleChange: (title: string | null) => void
 }) {
-  const [inputValue, setInputValue] = useState(selectedBookTitle || '')
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onBookTitleChange(inputValue.trim() || null)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [inputValue, onBookTitleChange])
-
-  useEffect(() => {
-    setInputValue(selectedBookTitle || '')
-  }, [selectedBookTitle])
-
-  const selectStyle: React.CSSProperties = {
-    fontFamily: 'Crimson Pro, serif',
-    fontSize: 15,
-    color: 'var(--brown-dark)',
-    background: 'var(--card-bg)',
-    border: '1px solid var(--border)',
-    borderRadius: 8,
-    padding: '4px 12px',
-    outline: 'none',
-    cursor: 'pointer',
-    minWidth: 200,
-  }
-
-  const hasActiveFilters = selectedMember || selectedBook || selectedBookTitle
+  const hasActiveFilters = selectedMember || selectedBook
 
   return (
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
-        {/* Book title search */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
-          <span style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-            Judul Buku:
-          </span>
-          <input
-            type="text"
-            value={inputValue}
-            onChange={e => setInputValue(e.target.value)}
-            placeholder="Cari judul buku..."
-            style={{
-              fontFamily: 'Crimson Pro, serif',
-              fontSize: 15,
-              color: 'var(--brown-dark)',
-              background: 'var(--card-bg)',
-              border: selectedBookTitle ? '1px solid var(--amber)' : '1px solid var(--border)',
-              borderRadius: 8,
-              padding: '4px 12px',
-              outline: 'none',
-              width: 200,
-            }}
-          />
-          {selectedBookTitle && (
-            <button
-              onClick={() => setInputValue('')}
-              style={{
-                position: 'absolute',
-                right: 8,
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: 14,
-                color: 'var(--text-muted)',
-                padding: 2,
-              }}
-            >
-              ✕
-            </button>
-          )}
-        </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontFamily: 'Lora, serif', fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             Pembaca:
           </span>
-          <select
-            value={selectedMember || ''}
-            onChange={e => onMemberChange(e.target.value || null)}
-            style={selectStyle}
-          >
-            <option value="">Semua pembaca</option>
-            {members.map(m => (
-              <option key={m.id} value={m.id}>
-                {m.display_name}
-              </option>
-            ))}
-          </select>
+          <div style={{ flex: 1, maxWidth: 280 }}>
+            <SearchableMemberSelect
+              members={members.map(m => ({ id: m.id, display_name: m.display_name }))}
+              value={selectedMember || ''}
+              onChange={v => onMemberChange(v || null)}
+              placeholder="Semua pembaca"
+              emptyLabel="Tidak ada pembaca ditemukan"
+            />
+          </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 200 }}>
@@ -1524,7 +1448,7 @@ function NotesFilter({ members, books, selectedMember, selectedBook, selectedBoo
 
         {hasActiveFilters && (
           <button
-            onClick={() => { onMemberChange(null); onBookChange(null); onBookTitleChange(null) }}
+            onClick={() => { onMemberChange(null); onBookChange(null) }}
             style={{
               fontFamily: 'Lora, serif',
               fontSize: 12,
