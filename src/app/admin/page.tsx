@@ -494,7 +494,7 @@ export default function AdminPage() {
     <div className="max-w-[860px] mx-auto px-7 py-10 pb-20">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="font-lora text-[26px] text-brown-dark m-0">
+        <h1 className="font-lora text-[26px] font-semibold text-brown-dark m-0">
           Admin — Silent Reading Club
         </h1>
         <div className="flex gap-5 mt-3">
@@ -740,6 +740,7 @@ export default function AdminPage() {
             onTitleChange={setBookTitleFilter}
             isCoverMode={false}
             onCoverModeChange={() => {}}
+            hideCoverToggle={true}
           />
           <BooksList
             books={data.books}

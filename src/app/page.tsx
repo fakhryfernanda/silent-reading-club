@@ -131,7 +131,7 @@ function HomePageContent() {
   return (
     <div className="max-w-[860px] mx-auto px-7">
 
-      <header className="pt-6 pb-8 md:pt-12 md:pb-8 border-b border-bookBorder mb-6 md:mb-8">
+      <header className="pt-2 pb-6 md:pt-4 md:pb-6 border-b border-bookBorder mb-4 md:mb-6">
         <h1 className="font-lora text-4xl md:text-[52px] font-semibold text-brown-dark leading-tight mb-3">
           Silent Reading Insights
         </h1>

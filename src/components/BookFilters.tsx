@@ -14,6 +14,7 @@ export type BookFilterProps = {
   onReset?: () => void
   isCoverMode: boolean
   onCoverModeChange: () => void
+  hideCoverToggle?: boolean
 }
 
 const BOOK_TYPES = ['Nonfiksi', 'Fiksi', 'Komik', 'Artikel', 'Jurnal', 'Kitab Suci']
@@ -33,6 +34,7 @@ export default function BookFilters({
   onReset,
   isCoverMode,
   onCoverModeChange,
+  hideCoverToggle = false,
 }: BookFilterProps) {
   const [inputValue, setInputValue] = useState(selectedTitle || '')
 
@@ -65,7 +67,7 @@ export default function BookFilters({
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
             placeholder="Cari judul buku..."
-            className={`font-crimson text-[15px] text-brown-dark bg-cardBg rounded-lg px-3 py-1 outline-none w-[200px] ${
+            className={`font-crimson text-[15px] text-brown-dark bg-cardBg rounded-lg px-3 py-0.5 outline-none w-[200px] ${
               selectedTitle ? 'border border-accent' : 'border border-bookBorder'
             }`}
           />
@@ -108,9 +110,9 @@ export default function BookFilters({
         </span>
         <button
           onClick={() => onTypeChange(null)}
-          className={`font-lora text-[13px] px-[14px] py-1 rounded-full whitespace-nowrap transition-all duration-150 cursor-pointer ${
-            !selectedType 
-              ? 'bg-accent text-white border-none' 
+          className={`font-lora text-[13px] px-[14px] py-0.5 rounded-full whitespace-nowrap transition-all duration-150 cursor-pointer ${
+            !selectedType
+              ? 'bg-accent text-white border-none'
               : 'bg-cardBg border border-bookBorder text-muted'
           }`}
         >
@@ -120,9 +122,9 @@ export default function BookFilters({
           <button
             key={type}
             onClick={() => onTypeChange(selectedType === type ? null : type)}
-            className={`font-lora text-[13px] px-[14px] py-1 rounded-full whitespace-nowrap transition-all duration-150 cursor-pointer ${
-              selectedType === type 
-                ? 'bg-accent text-white border-none' 
+            className={`font-lora text-[13px] px-[14px] py-0.5 rounded-full whitespace-nowrap transition-all duration-150 cursor-pointer ${
+              selectedType === type
+                ? 'bg-accent text-white border-none'
                 : 'bg-cardBg border border-bookBorder text-muted'
             }`}
           >
@@ -134,7 +136,7 @@ export default function BookFilters({
         {hasActiveFilters && (
           <button
             onClick={() => onReset ? onReset() : (onTypeChange(null), onReaderChange(null))}
-            className="font-lora text-xs px-3 py-1 rounded-full border border-accent bg-transparent text-accent cursor-pointer ml-auto"
+            className="font-lora text-xs px-3 py-0.5 rounded-full border border-accent bg-transparent text-accent cursor-pointer ml-auto"
           >
             Reset filter
           </button>
@@ -142,16 +144,18 @@ export default function BookFilters({
       </div>
 
       {/* Cover mode toggle row */}
-      <div className="flex justify-end items-center mt-2.5">
-        <div className="h-4 border-l border-bookBorder mr-2" />
-        <button
-          onClick={onCoverModeChange}
-          className="font-lora text-xs px-[14px] py-1 rounded-full border-none bg-brown-dark text-[#fdf6ee] cursor-pointer transition-all duration-150 min-w-[130px] text-center hover:bg-[#4a3728]"
-        >
-          <span className="mr-1 text-[13px]">⇄</span>
-          {isCoverMode ? 'Lihat Info' : 'Lihat Cover'}
-        </button>
-      </div>
+      {!hideCoverToggle && (
+        <div className="flex justify-end items-center mt-2.5">
+          <div className="h-4 border-l border-bookBorder mr-2" />
+          <button
+            onClick={onCoverModeChange}
+            className="font-lora text-xs px-[14px] py-1 rounded-full border-none bg-brown-dark text-[#fdf6ee] cursor-pointer transition-all duration-150 min-w-[130px] text-center hover:bg-[#4a3728]"
+          >
+            <span className="mr-1 text-[13px]">⇄</span>
+            {isCoverMode ? 'Lihat Info' : 'Lihat Cover'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
