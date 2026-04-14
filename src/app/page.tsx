@@ -7,6 +7,8 @@ import BookFilters from '@/components/BookFilters'
 
 type Stats = {
   totalBooks: number
+  totalJournals: number
+  totalArticles: number
   totalNotes: number
   totalReaders: number
 }
@@ -36,16 +38,20 @@ function HomePageContent() {
     fetch('/api/books')
       .then(res => res.json())
       .then(books => {
-        const totalBooks = books.length
+        const totalBooks = books.filter((b: any) => !['Jurnal', 'Artikel'].includes(b.type)).length
+        const totalJournals = books.filter((b: any) => b.type === 'Jurnal').length
+        const totalArticles = books.filter((b: any) => b.type === 'Artikel').length
         const totalNotes = books.reduce((sum: number, book: any) => sum + book.note_count, 0)
         const allReaders = new Set(
-          books.flatMap((book: any) => 
+          books.flatMap((book: any) =>
             (book.readers || []).map((r: any) => r.id)
           )
         )
-        
+
         setStats({
           totalBooks,
+          totalJournals,
+          totalArticles,
           totalNotes,
           totalReaders: allReaders.size
         })
@@ -79,7 +85,7 @@ function HomePageContent() {
       })
       .catch(err => {
         console.error('Error fetching stats:', err)
-        setStats({ totalBooks: 0, totalNotes: 0, totalReaders: 0 })
+        setStats({ totalBooks: 0, totalJournals: 0, totalArticles: 0, totalNotes: 0, totalReaders: 0 })
         setLoading(false)
       })
   }, [])
@@ -141,12 +147,14 @@ function HomePageContent() {
         <div className="flex gap-8 mt-6">
           {[
             { num: stats.totalBooks, label: 'Buku' },
+            { num: stats.totalJournals, label: 'Jurnal' },
+            { num: stats.totalArticles, label: 'Artikel' },
             { num: stats.totalReaders, label: 'Pembaca' },
             { num: stats.totalNotes, label: 'Catatan' },
           ].map(s => (
-            <div key={s.label} className="flex flex-col gap-0.5">
-              <span className="font-lora text-[22px] font-semibold text-accent">{s.num}</span>
-              <span className="text-[13px] text-muted tracking-wide">{s.label}</span>
+            <div key={s.label} className="flex flex-col gap-0.5 items-center">
+              <span className="font-lora text-[22px] font-semibold text-accent text-center">{s.num}</span>
+              <span className="text-[13px] text-muted tracking-wide text-center">{s.label}</span>
             </div>
           ))}
         </div>
