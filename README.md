@@ -142,10 +142,19 @@ Fitur:
 ## Development Notes
 
 - Menggunakan Supabase Client SDK (bukan raw SQL/Prisma)
-- Tidak pakai Tailwind — inline styles + CSS variables
+- **Tailwind CSS v3** — Styling dengan design tokens kustom (warna amber, serif font), @tailwindcss/typography untuk markdown rendering
 - Markdown rendering dengan `react-markdown`
 - Database setup terpisah di folder `migrations/`
 - Foto attachment dan cover buku disimpan di Cloudflare R2 dengan signed URL (expiry 7 hari, auto-refresh)
+
+### UI Features
+
+- 🎨 **Font size control** — Atur ukuran teks di halaman detail buku untuk kenyamanan membaca
+- 📖 **Dynamic page title** — Judul halaman otomatis mengikuti judul buku yang sedang dilihat
+- 🖼️ **Cover mode toggle** — Ganti tampilan kartu buku antara mode cover (gambar) dan mode info (detail)
+- 📐 **CSS flexbox layout** — Tinggi kartu buku seragam menggunakan pure CSS, tanpa JS measurement
+- 🎯 **Bold headers** — Header tebal untuk visual hierarchy yang lebih baik
+- 📱 **Responsive design** — Layout adaptif untuk mobile dan desktop dengan Tailwind utilities
 
 Detail lengkap untuk AI agent ada di `CLAUDE.md`.
 
