@@ -65,7 +65,7 @@ export default function AdminPage() {
   const [editValues, setEditValues] = useState<Record<string, string>>({})
   const [addForm, setAddForm] = useState<AddForm>(null)
   const [addValues, setAddValues] = useState<Record<string, string>>({})
-  const [totalCounters, setTotalCounters] = useState({ books: 0, members: 0, notes: 0 })
+  const [totalCounters, setTotalCounters] = useState({ books: 0, journals: 0, articles: 0, members: 0, notes: 0 })
   const [initialLoadDone, setInitialLoadDone] = useState(false)
   const [allBookTypes, setAllBookTypes] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
@@ -124,7 +124,9 @@ export default function AdminPage() {
       // Only update total counters on initial load
       if (!initialLoadDone) {
         setTotalCounters({
-          books: json.books.length,
+          books: json.books.filter((b: AdminBook) => b.type != null && !['Jurnal', 'Artikel'].includes(b.type as string)).length,
+          journals: json.books.filter((b: AdminBook) => b.type === 'Jurnal').length,
+          articles: json.books.filter((b: AdminBook) => b.type === 'Artikel').length,
           members: json.members.length,
           notes: json.notes.length,
         })
@@ -276,16 +278,26 @@ export default function AdminPage() {
         }))
       } else if (deleteTarget.type === 'books') {
         const deletedId = deleteTarget.id
+        const deletedBook = data.books.find(b => b.id === deletedId)
+        const deletedType = deletedBook?.type
         setData(d => d ? {
           ...d,
           books: d.books.filter(b => b.id !== deletedId),
           notes: d.notes.filter(n => n.book_id !== deletedId),
         } : d)
-        setTotalCounters(prev => ({
-          ...prev,
-          books: prev.books - 1,
-          notes: prev.notes - (data.notes.filter(n => n.book_id === deletedId).length),
-        }))
+        setTotalCounters(prev => {
+          const updates: Record<string, number> = {
+            notes: prev.notes - (data.notes.filter(n => n.book_id === deletedId).length),
+          }
+          if (deletedType === 'Jurnal') {
+            updates.journals = prev.journals - 1
+          } else if (deletedType === 'Artikel') {
+            updates.articles = prev.articles - 1
+          } else {
+            updates.books = prev.books - 1
+          }
+          return { ...prev, ...updates }
+        })
       } else {
         const deletedId = deleteTarget.id
         setData(d => d ? { ...d, notes: d.notes.filter(n => n.id !== deletedId) } : d)
@@ -341,10 +353,15 @@ export default function AdminPage() {
         }
         const created = await res.json()
         setData(d => d ? { ...d, books: [{ ...created, note_count: 0 }, ...d.books] } : d)
-        setTotalCounters(prev => ({
-          ...prev,
-          books: prev.books + 1,
-        }))
+        setTotalCounters(prev => {
+          const newType = created.type
+          if (newType === 'Jurnal') {
+            return { ...prev, journals: prev.journals + 1 }
+          } else if (newType === 'Artikel') {
+            return { ...prev, articles: prev.articles + 1 }
+          }
+          return { ...prev, books: prev.books + 1 }
+        })
         cancelAdd()
         return
       } else {
@@ -500,10 +517,12 @@ export default function AdminPage() {
         <div className="flex gap-5 mt-3">
           {[
             { label: 'Buku', count: totalCounters.books },
+            { label: 'Jurnal', count: totalCounters.journals },
+            { label: 'Artikel', count: totalCounters.articles },
             { label: 'Pembaca', count: totalCounters.members },
             { label: 'Catatan', count: totalCounters.notes },
           ].map(s => (
-            <span key={s.label} className="font-crimson text-[15px] text-muted">
+            <span key={s.label} className="font-crimson text-[15px] text-muted text-center">
               <strong className="text-accent">{s.count}</strong> {s.label}
             </span>
           ))}
