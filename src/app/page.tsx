@@ -25,6 +25,7 @@ function HomePageContent() {
   const [members, setMembers] = useState<Member[]>([])
   const [availableTypes, setAvailableTypes] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const [isCoverMode, setIsCoverMode] = useState(true)
 
   const selectedType = searchParams.get('type')
   const selectedReader = searchParams.get('reader')
@@ -161,9 +162,11 @@ function HomePageContent() {
         onReaderChange={handleReaderChange}
         onTitleChange={handleTitleChange}
         onReset={handleReset}
+        isCoverMode={isCoverMode}
+        onCoverModeChange={() => setIsCoverMode(prev => !prev)}
       />
 
-      <BookGrid typeFilter={selectedType} readerFilter={selectedReader} titleFilter={selectedTitle} />
+      <BookGrid typeFilter={selectedType} readerFilter={selectedReader} titleFilter={selectedTitle} isCoverMode={isCoverMode} />
 
       <footer style={{ borderTop: '1px solid var(--border)', padding: '28px 0', textAlign: 'center' }}>
         <div style={{ fontFamily: 'Lora, serif', fontStyle: 'italic', fontSize: 16, color: 'var(--brown-mid)' }}>

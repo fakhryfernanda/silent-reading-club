@@ -777,6 +777,8 @@ export default function AdminPage() {
             onTypeChange={setBookTypeFilter}
             onReaderChange={setBookReaderFilter}
             onTitleChange={setBookTitleFilter}
+            isCoverMode={false}
+            onCoverModeChange={() => {}}
           />
           <BooksList
             books={data.books}

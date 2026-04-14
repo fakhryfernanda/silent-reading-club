@@ -12,6 +12,8 @@ export type BookFilterProps = {
   onReaderChange: (readerId: string | null) => void
   onTitleChange: (title: string | null) => void
   onReset?: () => void
+  isCoverMode: boolean
+  onCoverModeChange: () => void
 }
 
 const BOOK_TYPES = ['Nonfiksi', 'Fiksi', 'Komik', 'Artikel', 'Jurnal', 'Kitab Suci']
@@ -55,6 +57,8 @@ export default function BookFilters({
   onReaderChange,
   onTitleChange,
   onReset,
+  isCoverMode,
+  onCoverModeChange,
 }: BookFilterProps) {
   const [inputValue, setInputValue] = useState(selectedTitle || '')
 
@@ -180,6 +184,40 @@ export default function BookFilters({
             Reset filter
           </button>
         )}
+      </div>
+
+      {/* Cover mode toggle row */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: 10 }}>
+        <div style={{
+          height: 16,
+          borderLeft: '1px solid var(--border)',
+          marginRight: 8,
+        }} />
+        <button
+          onClick={onCoverModeChange}
+          onMouseEnter={e => {
+            (e.target as HTMLButtonElement).style.background = '#4a3728'
+          }}
+          onMouseLeave={e => {
+            (e.target as HTMLButtonElement).style.background = '#3d2b1f'
+          }}
+          style={{
+            fontFamily: 'Lora, serif',
+            fontSize: 12,
+            padding: '4px 14px',
+            borderRadius: 999,
+            border: 'none',
+            background: '#3d2b1f',
+            color: '#fdf6ee',
+            cursor: 'pointer',
+            transition: 'all 0.15s',
+            minWidth: 130,
+            textAlign: 'center',
+          }}
+        >
+          <span style={{ marginRight: 4, fontSize: 13 }}>⇄</span>
+          {isCoverMode ? 'Lihat Info' : 'Lihat Cover'}
+        </button>
       </div>
     </div>
   )
