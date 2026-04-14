@@ -131,7 +131,7 @@ function HomePageContent() {
   return (
     <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px' }}>
 
-      <header style={{ padding: '48px 0 32px', borderBottom: '1px solid var(--border)', marginBottom: 32 }} className="homepage-header">
+      <header style={{ padding: '24px 0 32px', borderBottom: '1px solid var(--border)', marginBottom: 32 }} className="homepage-header">
         <h1 style={{ fontFamily: 'Lora, serif', fontSize: 52, fontWeight: 600, color: 'var(--brown-dark)', lineHeight: 1.1, marginBottom: 12 }} className="homepage-heading">
           Silent Reading Insights
         </h1>
