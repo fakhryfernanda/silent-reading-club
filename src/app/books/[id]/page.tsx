@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
+import { visit } from 'unist-util-visit'
 import { Book, Note } from '@/lib/types'
 import { timeAgo, avatarColor, initials } from '@/lib/utils'
 import ImageCarousel from '@/components/ImageCarousel'
@@ -13,6 +14,17 @@ type BookDetail = {
 }
 
 const COLLAPSE_CHAR_LIMIT = 300
+
+function remarkAsteriskBold() {
+  return (tree: any, file: any) => {
+    const src = String(file)
+    visit(tree, 'emphasis', (node: any) => {
+      if (node.position && src[node.position.start.offset] === '*') {
+        node.type = 'strong'
+      }
+    })
+  }
+}
 
 export default function BookPage() {
   const { id } = useParams<{ id: string }>()
@@ -259,7 +271,7 @@ export default function BookPage() {
 
                   return (
                     <>
-                      <ReactMarkdown>{displayContent}</ReactMarkdown>
+                      <ReactMarkdown remarkPlugins={[remarkAsteriskBold]}>{displayContent}</ReactMarkdown>
                       {shouldTruncate && (
                         <button
                           onClick={() => toggleNote(note.id)}
