@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import { visit } from 'unist-util-visit'
+import remarkBreaks from 'remark-breaks'
 import { Book, Note } from '@/lib/types'
 import { timeAgo, avatarColor, initials } from '@/lib/utils'
 import ImageCarousel from '@/components/ImageCarousel'
@@ -271,7 +272,7 @@ export default function BookPage() {
 
                   return (
                     <>
-                      <ReactMarkdown remarkPlugins={[remarkAsteriskBold]}>{displayContent}</ReactMarkdown>
+                      <ReactMarkdown remarkPlugins={[remarkAsteriskBold, remarkBreaks]}>{displayContent}</ReactMarkdown>
                       {shouldTruncate && (
                         <button
                           onClick={() => toggleNote(note.id)}
