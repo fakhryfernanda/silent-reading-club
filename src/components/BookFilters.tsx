@@ -6,10 +6,10 @@ export type BookFilterProps = {
   types?: string[]
   members?: { id: string; display_name: string; alias?: string | null }[]
   selectedType: string | null
-  selectedReader: string | null
+  selectedReader?: string | null
   selectedTitle: string | null
   onTypeChange: (type: string | null) => void
-  onReaderChange: (readerId: string | null) => void
+  onReaderChange?: (readerId: string | null) => void
   onTitleChange: (title: string | null) => void
   onReset?: () => void
   isCoverMode: boolean
@@ -18,9 +18,6 @@ export type BookFilterProps = {
 }
 
 const BOOK_TYPES = ['Nonfiksi', 'Fiksi', 'Komik', 'Artikel', 'Jurnal', 'Kitab Suci']
-
-const displayName = (m: { display_name: string; alias?: string | null }) =>
-  m.alias || m.display_name
 
 export default function BookFilters({
   types = BOOK_TYPES,
@@ -82,7 +79,7 @@ export default function BookFilters({
         </div>
 
         {/* Reader filter */}
-        {members.length > 0 && (
+        {onReaderChange && members.length > 0 && (
           <div className="flex items-center gap-2">
             <span className="font-lora text-xs text-muted tracking-widest uppercase">
               Pembaca:
@@ -95,7 +92,7 @@ export default function BookFilters({
               <option value="">Semua pembaca</option>
               {members.map(m => (
                 <option key={m.id} value={m.id}>
-                  {displayName(m)}
+                  {m.display_name}
                 </option>
               ))}
             </select>
@@ -135,7 +132,7 @@ export default function BookFilters({
         {/* Reset button */}
         {hasActiveFilters && (
           <button
-            onClick={() => onReset ? onReset() : (onTypeChange(null), onReaderChange(null))}
+            onClick={() => onReset ? onReset() : onTypeChange(null)}
             className="font-lora text-xs px-3 py-0.5 rounded-full border border-accent bg-transparent text-accent cursor-pointer ml-auto"
           >
             Reset filter

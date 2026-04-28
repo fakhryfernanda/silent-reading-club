@@ -13,24 +13,16 @@ type Stats = {
   totalReaders: number
 }
 
-type Member = {
-  id: string
-  display_name: string
-  alias: string | null
-}
-
 function HomePageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   
   const [stats, setStats] = useState<Stats | null>(null)
-  const [members, setMembers] = useState<Member[]>([])
   const [availableTypes, setAvailableTypes] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [isCoverMode, setIsCoverMode] = useState(true)
 
   const selectedType = searchParams.get('type')
-  const selectedReader = searchParams.get('reader')
   const selectedTitle = searchParams.get('title')
 
   useEffect(() => {
@@ -56,23 +48,6 @@ function HomePageContent() {
           totalReaders: allReaders.size
         })
 
-        // Extract unique members from books
-        const memberMap = new Map<string, Member>()
-        books.forEach((book: any) => {
-          (book.readers || []).forEach((reader: any) => {
-            if (!memberMap.has(reader.id)) {
-              memberMap.set(reader.id, {
-                id: reader.id,
-                display_name: reader.display_name,
-                alias: reader.alias || null
-              })
-            }
-          })
-        })
-        setMembers(Array.from(memberMap.values()).sort((a, b) =>
-          a.display_name.localeCompare(b.display_name)
-        ))
-
         // Extract unique book types
         const types = [...new Set(
           books
@@ -96,16 +71,6 @@ function HomePageContent() {
       params.set('type', type)
     } else {
       params.delete('type')
-    }
-    router.push(`?${params.toString()}`)
-  }
-
-  const handleReaderChange = (readerId: string | null) => {
-    const params = new URLSearchParams(searchParams.toString())
-    if (readerId) {
-      params.set('reader', readerId)
-    } else {
-      params.delete('reader')
     }
     router.push(`?${params.toString()}`)
   }
@@ -163,18 +128,15 @@ function HomePageContent() {
       <BookFilters
         types={availableTypes}
         selectedType={selectedType}
-        selectedReader={selectedReader}
         selectedTitle={selectedTitle}
-        members={members}
         onTypeChange={handleTypeChange}
-        onReaderChange={handleReaderChange}
         onTitleChange={handleTitleChange}
         onReset={handleReset}
         isCoverMode={isCoverMode}
         onCoverModeChange={() => setIsCoverMode(prev => !prev)}
       />
 
-      <BookGrid typeFilter={selectedType} readerFilter={selectedReader} titleFilter={selectedTitle} isCoverMode={isCoverMode} />
+      <BookGrid typeFilter={selectedType} readerFilter={null} titleFilter={selectedTitle} isCoverMode={isCoverMode} />
 
       <footer className="border-t border-bookBorder py-7 text-center">
         <div className="font-lora italic text-base text-brown-mid">
