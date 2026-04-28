@@ -27,6 +27,26 @@ function remarkAsteriskBold() {
   }
 }
 
+function remarkLinkify() {
+  return (tree: any) => {
+    visit(tree, 'text', (node: any, index: number | undefined, parent: any) => {
+      if (!parent || index === undefined) return
+      const urlRegex = /(https?:\/\/\S+)/g
+      if (!urlRegex.test(node.value)) return
+
+      const parts = node.value.split(/(https?:\/\/\S+)/g)
+      const newNodes = parts
+        .filter((p: string) => p !== '')
+        .map((part: string) =>
+          /^https?:\/\//.test(part)
+            ? { type: 'link', url: part, children: [{ type: 'text', value: part }] }
+            : { type: 'text', value: part }
+        )
+      parent.children.splice(index, 1, ...newNodes)
+    })
+  }
+}
+
 export default function BookPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
@@ -272,7 +292,14 @@ export default function BookPage() {
 
                   return (
                     <>
-                      <ReactMarkdown remarkPlugins={[remarkAsteriskBold, remarkBreaks]}>{displayContent}</ReactMarkdown>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkAsteriskBold, remarkBreaks, remarkLinkify]}
+                        components={{
+                          a: ({ href, children }) => (
+                            <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline', wordBreak: 'break-all' }}>{children}</a>
+                          )
+                        }}
+                      >{displayContent}</ReactMarkdown>
                       {shouldTruncate && (
                         <button
                           onClick={() => toggleNote(note.id)}
